@@ -33,14 +33,16 @@ export function createControls(camera, domElement) {
   return controls;
 }
 
-export function applyCameraPreset(camera, controls, name) {
-  const preset = PRESETS[name];
-  if (!preset) {
+// Accepts a preset name or an explicit { position, target } (used by the
+// screenshot harness for custom framings).
+export function applyCameraPreset(camera, controls, preset) {
+  const resolved = typeof preset === 'string' ? PRESETS[preset] : preset;
+  if (!resolved?.position || !resolved?.target) {
     throw new Error(
-      `Unknown camera preset "${name}" (known: ${Object.keys(PRESETS).join(', ')})`
+      `Unknown camera preset "${preset}" (known: ${Object.keys(PRESETS).join(', ')})`
     );
   }
-  camera.position.set(...preset.position);
-  controls.target.set(...preset.target);
+  camera.position.set(...resolved.position);
+  controls.target.set(...resolved.target);
   controls.update();
 }

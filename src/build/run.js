@@ -3,6 +3,23 @@ import { DIMS } from '../state/schema.js';
 import { buildModule, doorFaceZ } from './cabinet.js';
 import { box, worldScaleBoxUVs } from './util.js';
 
+// Per-unit-type context shared by the module generator and validation.
+export function unitContext(item) {
+  const unitType = item.unitType ?? 'base';
+  const floorStanding = unitType !== 'wall';
+  const plinth = floorStanding && item.plinth !== false;
+  const yBase = unitType === 'wall' ? DIMS.wallUnitMount : plinth ? DIMS.plinthHeight : 0;
+  const carcassHeight =
+    unitType === 'tall'
+      ? DIMS.tallHeight - (plinth ? DIMS.plinthHeight : 0)
+      : unitType === 'wall'
+        ? DIMS.wallUnitHeight
+        : DIMS.baseHeight;
+  const carcassDepth =
+    unitType === 'wall' ? DIMS.wallUnitDepth - DIMS.frontThickness : DIMS.carcassDepth;
+  return { itemId: item.id, materials: item.materials, unitType, plinth, yBase, carcassHeight, carcassDepth };
+}
+
 // Pure generator: a run item -> THREE.Group (see CLAUDE.md).
 // Modules go left to right along local +x; doors face local +z. The group
 // origin is the run's left-back-bottom corner; item.position/rotationY place it.
@@ -10,23 +27,20 @@ export function buildRun(item, matLib) {
   const group = new THREE.Group();
   group.name = `run:${item.id}`;
   group.userData.itemId = item.id;
-
-  const unitCtx = {
-    itemId: item.id,
-    materials: item.materials,
-    plinth: item.plinth !== false,
-  };
+  const ctx = unitContext(item);
 
   let cursor = 0;
   for (const module of item.modules ?? []) {
-    const moduleGroup = buildModule(module, unitCtx, matLib);
+    const moduleGroup = buildModule(module, ctx, matLib);
     moduleGroup.position.x = cursor;
     group.add(moduleGroup);
     cursor += module.width;
   }
 
-  if (item.worktop !== false && cursor > 0) {
-    group.add(buildWorktop(item, cursor, unitCtx, matLib));
+  const wantsWorktop =
+    item.worktop !== false && (ctx.unitType === 'base' || ctx.unitType === 'island');
+  if (wantsWorktop && cursor > 0) {
+    group.add(buildWorktop(item, cursor, ctx, matLib));
   }
 
   group.position.set(item.position?.[0] ?? 0, 0, item.position?.[1] ?? 0);
@@ -35,10 +49,10 @@ export function buildRun(item, matLib) {
 }
 
 // One slab spanning the full run: sides flush, front overhang, back at z=0.
-function buildWorktop(item, runWidth, unitCtx, matLib) {
+function buildWorktop(item, runWidth, ctx, matLib) {
   const t = DIMS.worktopThickness;
-  const depth = doorFaceZ() + DIMS.worktopOverhang;
-  const y = (unitCtx.plinth ? DIMS.plinthHeight : 0) + DIMS.baseHeight;
+  const depth = doorFaceZ(ctx.carcassDepth) + DIMS.worktopOverhang;
+  const y = ctx.yBase + ctx.carcassHeight;
 
   const material = matLib.get(item.materials.worktop);
   const slab = box(runWidth, t, depth, material, {

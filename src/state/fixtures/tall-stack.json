@@ -1,0 +1,45 @@
+{
+  "room": {
+    "width": 6,
+    "depth": 5,
+    "wallHeight": 2.6,
+    "wallColor": "paint_white",
+    "floorMaterial": "tile_light"
+  },
+  "items": [
+    {
+      "id": "run-1",
+      "kind": "run",
+      "unitType": "base",
+      "position": [-0.3, -2.5],
+      "rotationY": 0,
+      "worktop": true,
+      "plinth": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "m1",
+          "type": "drawerBase",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            { "id": "c1", "type": "drawer", "weight": 1 },
+            { "id": "c2", "type": "drawer", "weight": 1 },
+            {
+              "id": "c3",
+              "type": "door",
+              "style": { "hinge": "double", "glass": true },
+              "shelvesInside": 1,
+              "weight": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

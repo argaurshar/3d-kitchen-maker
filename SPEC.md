@@ -86,12 +86,11 @@ Updated whenever a feature lands (see CLAUDE.md).
       and floor materials
 - [x] **P5 — Cabinet module generator**: carcass, doors, drawers, handles;
       compartments with proportional weights and fixed-height slots
-      *(drawers + weighted compartments still pending; single shaker door,
-      three handle styles, hollow carcass and plinth landed)*
 - [ ] **P6 — Run generator**: modules laid out in a row with fronts gap,
       worktop and plinth
 - [ ] **P7 — Unit types**: wall, tall and island runs with correct heights,
-      depths and mounting
+      depths and mounting *(tall + wall landed with the compartment stack;
+      island pending)*
 - [ ] **P8 — Picking & selection**: raycast picking via `userData`, selection
       highlight
 - [ ] **P9 — Side panel**: live editing of the selected item's parameters,

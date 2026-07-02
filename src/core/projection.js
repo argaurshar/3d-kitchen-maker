@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { buildRoom, updateWallVisibility, FLOOR_TOP_Y } from './room.js';
-import { buildRun } from '../build/run.js';
+import { buildRun, unitContext } from '../build/run.js';
+import { solveHeights } from '../build/compartments.js';
 import { disposeGroup } from './dispose.js';
 import { materialLibrary } from '../materials/library.js';
 import { store } from '../state/store.js';
@@ -40,6 +41,23 @@ export function createProjection(scene) {
     group.position.y += FLOOR_TOP_Y; // items sit on the room floor plane
     itemGroups.set(item.id, group);
     scene.add(group);
+    validateItem(item);
+  }
+
+  // Flag modules whose compartment stack can't fit (renders as the red
+  // warning box). Generators stay pure; the projection owns the store write.
+  // Converges: the write triggers one rebuild, after which flags match.
+  function validateItem(item) {
+    if (item.kind !== 'run') return;
+    const index = store.get().items.findIndex((i) => i.id === item.id);
+    if (index < 0) return;
+    const ctx = unitContext(item);
+    (item.modules ?? []).forEach((module, m) => {
+      const invalid = Boolean(solveHeights(module.compartments ?? [], ctx.carcassHeight).error);
+      if (Boolean(module.invalid) !== invalid) {
+        store.set(`items.${index}.modules.${m}.invalid`, invalid);
+      }
+    });
   }
 
   function rebuildAllItems() {

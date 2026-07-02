@@ -40,4 +40,29 @@ export const SWATCHES = [
     category: 'metal',
     params: { color: '#c8ccd0', metalness: 0.9, roughness: 0.35 },
   },
+  {
+    id: 'glass_tint',
+    label: 'Tinted Glass',
+    category: 'glass',
+    params: {
+      color: '#b9c7bf',
+      roughness: 0.12,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.25,
+      depthWrite: false,
+    },
+  },
+  {
+    id: 'glass_dark',
+    label: 'Appliance Glass',
+    category: 'glass',
+    params: { color: '#15181b', roughness: 0.15, metalness: 0.6 },
+  },
+  {
+    id: 'appliance_dark',
+    label: 'Appliance Body',
+    category: 'metal',
+    params: { color: '#2c2f33', roughness: 0.4, metalness: 0.5 },
+  },
 ];
