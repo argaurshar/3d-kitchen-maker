@@ -1,0 +1,18 @@
+{
+  "name": "3d-kitchen-maker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.53.0",
+    "vite": "^8.1.3"
+  }
+}
