@@ -4,6 +4,7 @@ import { buildRun, unitContext } from '../build/run.js';
 import { buildPlaceholder } from '../build/placeholder.js';
 import { buildFridge } from '../build/appliances/fridge.js';
 import { buildHood } from '../build/appliances/hood.js';
+import { buildStool } from '../build/furniture/stool.js';
 import { solveHeights } from '../build/compartments.js';
 import { disposeGroup } from './dispose.js';
 import { materialLibrary } from '../materials/library.js';
@@ -52,6 +53,7 @@ export function createProjection(scene) {
       return group;
     }
     if (item.kind === 'appliance' && item.applianceType === 'hood') return buildHood(item, materialLibrary);
+    if (item.kind === 'furniture' && item.furnitureType === 'stool') return buildStool(item, materialLibrary);
     if (item.kind === 'appliance' || item.kind === 'furniture') return buildPlaceholder(item);
     console.warn(`projection: no builder for item kind "${item.kind}" yet`);
     return new THREE.Group();

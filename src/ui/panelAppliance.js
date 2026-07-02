@@ -1,5 +1,6 @@
-import { setApplianceParam } from '../state/actions.js';
+import { setApplianceParam, setFurnitureParam } from '../state/actions.js';
 import { FRIDGE_DEFAULTS, FRIDGE_FINISHES } from '../build/appliances/fridge.js';
+import { stoolParams } from '../build/furniture/stool.js';
 import { SWATCHES } from '../materials/swatches.js';
 import { el, segmented, slider, toggle, rafThrottle } from './controls.js';
 
@@ -78,6 +79,55 @@ export function renderFridgePanel(body, item, helpers) {
   );
   addSection(body, 'fridge-dispenser', 'Dispenser').appendChild(
     toggle('Water dispenser', p.dispenser, (v) => set('dispenser', v))
+  );
+}
+
+// Stool panel: Preset chips, Seat, Footprint, Footrest, Backrest.
+export function renderStoolPanel(body, item, helpers) {
+  const { addSection, run, withLive } = helpers;
+  const p = stoolParams(item);
+  const set = (key, value) => run(setFurnitureParam(item.id, key, value));
+  const cm = (v) => `${Math.round(v * 100)} cm`;
+  const liveSlider = (parent, key, label, min, max) => {
+    const live = rafThrottle((v) => withLive(() => setFurnitureParam(item.id, key, v / 100)));
+    parent.appendChild(
+      slider(label, min, max, 1, Math.round(p[key] * 100), (v) => `${v} cm`, (v, isLive) => {
+        if (isLive) live(v);
+        else set(key, v / 100);
+      })
+    );
+  };
+
+  const presets = el('div', 'chip-row');
+  for (const preset of ['counter', 'bar', 'square']) {
+    const chip = el('button', `chip${(item.params?.preset ?? 'counter') === preset ? ' active' : ''}`);
+    chip.type = 'button';
+    chip.appendChild(el('span', 'chip-label', preset[0].toUpperCase() + preset.slice(1)));
+    chip.addEventListener('click', () => set('preset', preset));
+    presets.appendChild(chip);
+  }
+  addSection(body, 'stool-preset', 'Preset').appendChild(presets);
+
+  const seat = addSection(body, 'stool-seat', 'Seat');
+  seat.appendChild(
+    segmented(
+      [{ value: 'round', label: 'Round' }, { value: 'square', label: 'Square' }],
+      p.seatShape,
+      (v) => set('seatShape', v)
+    )
+  );
+  liveSlider(seat, 'seatRadius', 'Seat radius', 14, 22);
+  liveSlider(seat, 'seatThickness', 'Thickness', 2, 6);
+  liveSlider(seat, 'seatHeight', 'Seat height', 45, 80);
+
+  liveSlider(addSection(body, 'stool-footprint', 'Footprint'), 'legSpread', 'Leg spread', 0, 12);
+
+  const footrest = addSection(body, 'stool-footrest', 'Footrest');
+  footrest.appendChild(toggle('Footrest ring', p.footrestRing, (v) => set('footrestRing', v)));
+  if (p.footrestRing) liveSlider(footrest, 'ringHeight', 'Ring height', 10, 30);
+
+  addSection(body, 'stool-backrest', 'Backrest').appendChild(
+    toggle('Backrest', p.backrest, (v) => set('backrest', v))
   );
 }
 

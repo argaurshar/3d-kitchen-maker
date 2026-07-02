@@ -88,9 +88,8 @@ Updated whenever a feature lands (see CLAUDE.md).
       compartments with proportional weights and fixed-height slots
 - [x] **P6 — Run generator**: modules laid out in a row with fronts gap,
       worktop and plinth
-- [ ] **P7 — Unit types**: wall, tall and island runs with correct heights,
-      depths and mounting *(tall + wall landed with the compartment stack;
-      island pending)*
+- [x] **P7 — Unit types**: wall, tall and island runs with correct heights,
+      depths and mounting
 - [x] **P8 — Picking & selection**: raycast picking via `userData`, selection
       highlight
 - [x] **P9 — Side panel**: live editing of the selected item's parameters,
@@ -98,8 +97,7 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [x] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
       *(hob/sink/tap are worktop features on `run.features`; fridge has the
       full type/finish/dimensions panel)*
-- [ ] **P11 — Furniture**: parametric stools *(placeholder placeable; real
-      generator pending)*
+- [x] **P11 — Furniture**: parametric stools
 - [x] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping
       to walls and neighboring runs
 - [ ] **P13 — Paint mode**: per-surface material painting via radial swatch

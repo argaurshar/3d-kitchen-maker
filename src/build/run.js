@@ -48,6 +48,9 @@ export function buildRun(item, matLib) {
     group.add(buildWorktop(item, cursor, ctx, matLib));
     addWorktopFeatures(group, item, ctx, matLib);
   }
+  if (ctx.unitType === 'island' && cursor > 0) {
+    addIslandPanels(group, item, cursor, ctx, matLib);
+  }
 
   group.position.set(item.position?.[0] ?? 0, 0, item.position?.[1] ?? 0);
   group.rotation.y = item.rotationY ?? 0;
@@ -70,10 +73,14 @@ function addWorktopFeatures(group, item, ctx, matLib) {
   }
 }
 
-// One slab spanning the full run: sides flush, front overhang, back at z=0.
+const ISLAND_BACK_OVERHANG = 0.3;
+
+// One slab spanning the full run: sides flush, front overhang, back at
+// z=0 — except islands, whose slab extends 0.30 past the back for seating.
 function buildWorktop(item, runWidth, ctx, matLib) {
   const t = DIMS.worktopThickness;
-  const depth = doorFaceZ(ctx.carcassDepth) + DIMS.worktopOverhang;
+  const back = ctx.unitType === 'island' ? ISLAND_BACK_OVERHANG : 0;
+  const depth = doorFaceZ(ctx.carcassDepth) + DIMS.worktopOverhang + back;
   const y = ctx.yBase + ctx.carcassHeight;
 
   const material = matLib.get(item.materials.worktop);
@@ -82,6 +89,23 @@ function buildWorktop(item, runWidth, ctx, matLib) {
     surfaceRole: 'worktop',
   });
   worldScaleBoxUVs(slab.geometry, runWidth, t, depth);
-  slab.position.set(runWidth / 2, y + t / 2, depth / 2);
+  slab.position.set(runWidth / 2, y + t / 2, depth / 2 - back);
   return slab;
+}
+
+// Islands never show raw carcass: finished panels close the back and ends.
+function addIslandPanels(group, item, runWidth, ctx, matLib) {
+  const P = DIMS.panelThickness;
+  const material = matLib.get(item.materials.door);
+  const H = ctx.carcassHeight + (ctx.plinth ? DIMS.plinthHeight : 0);
+  const panels = [
+    { size: [runWidth + 2 * P, H, P], pos: [runWidth / 2, H / 2, -P / 2] },
+    { size: [P, H, ctx.carcassDepth + P], pos: [-P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P] },
+    { size: [P, H, ctx.carcassDepth + P], pos: [runWidth + P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P] },
+  ];
+  for (const { size, pos } of panels) {
+    const mesh = box(...size, material, { itemId: item.id, surfaceRole: 'carcass' });
+    mesh.position.set(...pos);
+    group.add(mesh);
+  }
 }

@@ -31,11 +31,14 @@ function ghostSpec(kind) {
     const depth = doorFaceZ() + DIMS.worktopOverhang;
     const specs = {
       base: { w: 0.6, h: 0.88, d: depth, y: 0 },
-      island: { w: 1.2, h: 0.88, d: depth, y: 0 },
+      island: { w: 1.2, h: 0.88, d: depth + 0.3, y: 0 },
       tall: { w: 0.6, h: DIMS.tallHeight, d: doorFaceZ(), y: 0 },
       wall: { w: 0.6, h: DIMS.wallUnitHeight, d: DIMS.wallUnitDepth, y: DIMS.wallUnitMount },
     };
     return specs[kind.unitType];
+  }
+  if (kind.furnitureType === 'stool') {
+    return { w: 0.46, h: 0.65, d: 0.46, feature: null, centered: true };
   }
   if (kind.applianceType === 'fridge') {
     return { w: FRIDGE_DEFAULTS.width, h: FRIDGE_DEFAULTS.height, d: FRIDGE_DEFAULTS.depth, y: 0 };
@@ -85,8 +88,8 @@ export function createGhost(scene) {
     }
     body = new THREE.Mesh(new THREE.BoxGeometry(spec.w, spec.h, spec.d), material);
     body.raycast = () => {};
-    // Features are centered on their origin; everything else is corner-origin.
-    if (spec.feature) body.position.set(0, spec.h / 2, 0);
+    // Features and stools are centered on their origin; the rest corner-origin.
+    if (spec.feature || spec.centered) body.position.set(0, spec.h / 2, 0);
     else body.position.set(spec.w / 2, (spec.y ?? 0) + spec.h / 2, spec.d / 2);
     group.add(body);
     group.visible = false;
@@ -130,7 +133,7 @@ export function createGhost(scene) {
     const p = new THREE.Vector3();
     if (!raycaster.ray.intersectPlane(floorPlane, p)) return;
     const rot = candidate?.rotationY ?? 0;
-    const [cx, cz] = rot2(spec.w / 2, spec.d / 2, rot);
+    const [cx, cz] = spec.centered ? [0, 0] : rot2(spec.w / 2, spec.d / 2, rot);
     const raw = [p.x - cx, p.z - cz];
 
     if (kind.type === 'run' || spec.requiresWall) {

@@ -1,7 +1,7 @@
 import { store } from '../state/store.js';
 import * as actions from '../state/actions.js';
 import { effectiveCompartments } from '../build/compartments.js';
-import { renderFridgePanel, renderHoodPanel } from './panelAppliance.js';
+import { renderFridgePanel, renderHoodPanel, renderStoolPanel } from './panelAppliance.js';
 import { el, segmented, slider, stepper, toggle, listRow, button, section, iconButton, rafThrottle } from './controls.js';
 
 const UNIT_LABELS = { base: 'Base unit', tall: 'Tall unit', wall: 'Wall unit', island: 'Island' };
@@ -98,7 +98,8 @@ function render() {
     const helpers = { addSection: (b, key, title) => addSection(b, key, title), run, withLive };
     if (item.kind === 'appliance' && item.applianceType === 'fridge') renderFridgePanel(body, item, helpers);
     else if (item.kind === 'appliance' && item.applianceType === 'hood') renderHoodPanel(body, item, helpers);
-    else if (item.kind !== 'run') body.appendChild(el('div', 'panel-note', 'Parametric editor arrives in Prompt 11'));
+    else if (item.kind === 'furniture' && item.furnitureType === 'stool') renderStoolPanel(body, item, helpers);
+    else if (item.kind !== 'run') body.appendChild(el('div', 'panel-note', 'No editable parameters yet'));
     else if (module) renderModulePanel(body, item, module);
     else renderRunPanel(body, item);
   }

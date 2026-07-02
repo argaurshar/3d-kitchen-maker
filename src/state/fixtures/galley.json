@@ -148,6 +148,49 @@
       "position": [-1.1, -2.5],
       "rotationY": 0,
       "params": {}
+    },
+    {
+      "id": "island-1",
+      "kind": "run",
+      "unitType": "island",
+      "position": [-1.9, -0.4],
+      "rotationY": 3.141592653589793,
+      "worktop": true,
+      "plinth": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        { "id": "i1", "type": "drawerBase", "width": 0.6, "handle": "bar", "compartments": [] },
+        {
+          "id": "i2",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            { "id": "i2c1", "type": "door", "style": { "hinge": "R", "glass": false }, "shelvesInside": 1, "weight": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stool-1",
+      "kind": "furniture",
+      "furnitureType": "stool",
+      "position": [-2.5, 0.15],
+      "rotationY": 0,
+      "params": { "preset": "counter" }
+    },
+    {
+      "id": "stool-2",
+      "kind": "furniture",
+      "furnitureType": "stool",
+      "position": [-1.9, 0.15],
+      "rotationY": 0,
+      "params": { "preset": "counter" }
     }
   ]
 }
