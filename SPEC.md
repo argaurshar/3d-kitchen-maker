@@ -102,4 +102,4 @@ Updated whenever a feature lands (see CLAUDE.md).
       to walls and neighboring runs
 - [x] **P13 — Paint mode**: per-surface material painting via radial swatch
       wheel
-- [ ] **P14 — Polish**: materials library breadth, persistence, final QA pass
+- [x] **P14 — Polish**: materials library breadth, persistence, final QA pass

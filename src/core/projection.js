@@ -9,6 +9,8 @@ import { solveHeights } from '../build/compartments.js';
 import { disposeGroup } from './dispose.js';
 import { materialLibrary } from '../materials/library.js';
 import { store } from '../state/store.js';
+import { tween } from './tween.js';
+import { applyOpenAmount } from '../build/fronts.js';
 
 // Clay ("Solid") mode: every item mesh renders in one shared matte white.
 // Real materials are pointer-swapped into userData and restored on toggle.
@@ -67,11 +69,34 @@ export function createProjection(scene) {
     itemGroups.delete(id);
   }
 
+  function setOpenAmount(group, amount) {
+    group.traverse((node) => {
+      if (node.userData?.openable) applyOpenAmount(node, amount);
+    });
+  }
+
+  // openFronts toggles animate the existing group instead of rebuilding.
+  function animateOpenFronts(item) {
+    const group = itemGroups.get(item.id);
+    if (!group) return;
+    let current = 0;
+    group.traverse((node) => {
+      if (node.userData?.openable) current = node.userData.openAmount ?? 0;
+    });
+    tween({
+      from: current,
+      to: item.openFronts ? 1 : 0,
+      duration: 350,
+      onUpdate: (v) => setOpenAmount(group, v),
+    });
+  }
+
   function rebuildItem(item) {
     removeItem(item.id);
     const group = buildItemGroup(item);
     group.position.y += FLOOR_TOP_Y; // items sit on the room floor plane
     if (clay) applyClay(group, true);
+    if (item.openFronts) setOpenAmount(group, 1);
     itemGroups.set(item.id, group);
     scene.add(group);
     validateItem(item);
@@ -104,12 +129,13 @@ export function createProjection(scene) {
       rebuildAllItems();
       return;
     }
-    const [head, index] = change.path.split('.');
+    const [head, index, ...rest] = change.path.split('.');
     if (head === 'room') {
       rebuildRoom();
     } else if (head === 'items') {
       const item = store.get().items[Number(index)];
       if (index === undefined || !item) rebuildAllItems();
+      else if (rest.join('.') === 'openFronts') animateOpenFronts(item);
       else rebuildItem(item);
     }
   });

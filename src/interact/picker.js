@@ -20,6 +20,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   const ghost = createGhost(scene);
 
   let tool = 'select'; // 'select' | 'paint' | 'delete'
+  let suspended = false; // preview / walk modes own the pointer
   let hoveredId = null;
   let selectedId = null;
   let dragging = null; // 'gizmo' | 'item'
@@ -106,7 +107,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   dom.addEventListener(
     'pointerdown',
     (event) => {
-      if (event.button !== 0) return;
+      if (suspended || event.button !== 0) return;
       downAt = [event.clientX, event.clientY];
       const hit = pick(event);
       let started = false;
@@ -121,6 +122,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   );
 
   dom.addEventListener('pointermove', (event) => {
+    if (suspended) return;
     if (ghost.active()) {
       castFrom(event);
       ghost.update(raycaster, store.get(), placement.getSnap());
@@ -147,6 +149,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   });
 
   dom.addEventListener('pointerup', (event) => {
+    if (suspended) return;
     if (dragging) {
       dragging = null;
       controls.enabled = true;
@@ -203,6 +206,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   }
 
   window.addEventListener('keydown', (event) => {
+    if (suspended) return;
     if (event.key === 'Escape') {
       if (paint?.escape()) return;
       if (ghost.active()) cancelPlacement();
@@ -242,6 +246,10 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       tool = t;
       cancelPlacement();
       if (t !== 'select') select(null);
+    },
+    setSuspended(v) {
+      suspended = Boolean(v);
+      if (suspended) setHover(null);
     },
     getTool: () => tool,
     beginPlacement(kind) {

@@ -384,6 +384,97 @@ input[type='range'] {
 .wheel-disc { fill: #26282cf2; pointer-events: none; }
 .wheel-label,
 .wheel-sublabel { pointer-events: none; }
+
+/* ---------- View chrome (preview / walk) + file menu ---------- */
+
+.view-chrome {
+  position: fixed;
+  top: 12px;
+  right: 288px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 12;
+}
+.person-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: #26282cf0;
+  color: #e6e7e9;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.person-btn:hover { background: #4a545e; }
+.preview-pill {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #26282cf0;
+  color: #e6e7e9;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.preview-pill:hover { background: #4a545e; }
+.preview-pill.active { background: #8fa387; color: #1b1d20; font-weight: 600; }
+
+.file-menu { position: fixed; top: 12px; left: 12px; z-index: 12; }
+.file-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #26282cf0;
+  color: #e6e7e9;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.file-btn:hover { background: #4a545e; }
+.file-dropdown {
+  margin-top: 6px;
+  background: #26282cf8;
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.file-dropdown.hidden { display: none; }
+.file-entry {
+  border: 0;
+  background: transparent;
+  color: #e6e7e9;
+  text-align: left;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.file-entry:hover { background: #4a545e; }
+
+/* Preview / walk hide every editor pixel except the view chrome. */
+body.preview-mode .toolbar,
+body.preview-mode .panel,
+body.preview-mode .furnish-row,
+body.preview-mode .plus-btn,
+body.preview-mode .pill-btn,
+body.preview-mode .file-menu,
+body.preview-mode .toast,
+body.walk-mode .toolbar,
+body.walk-mode .panel,
+body.walk-mode .furnish-row,
+body.walk-mode .plus-btn,
+body.walk-mode .pill-btn,
+body.walk-mode .file-menu,
+body.walk-mode .toast {
+  display: none !important;
+}
 .wheel-label {
   fill: #ffffff;
   font: 600 15px system-ui, sans-serif;

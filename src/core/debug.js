@@ -58,6 +58,12 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
     },
     getCameraPosition: () => camera.position.toArray(),
     pickAt: (x, y, raw) => picker?.pickAt(x, y, raw),
+    getControlsState: () => ({
+      state: controls.state,
+      autoRotate: controls.autoRotate,
+      enabled: controls.enabled,
+      target: controls.target.toArray(),
+    }),
 
     // Distinct material names on an item's meshes (clay-mode assertions).
     getItemMaterials(itemId) {

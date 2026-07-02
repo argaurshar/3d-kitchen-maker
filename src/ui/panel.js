@@ -161,6 +161,9 @@ function renderRunPanel(body, item) {
   structure.appendChild(toggle('Worktop', item.worktop !== false, (v) => run(actions.setUnitParam(item.id, 'worktop', v))));
   structure.appendChild(toggle('Plinth (toe kick)', item.plinth !== false, (v) => run(actions.setUnitParam(item.id, 'plinth', v))));
 
+  const runActions = addSection(body, 'run-actions', 'Actions');
+  runActions.appendChild(toggle('Open fronts', item.openFronts === true, (v) => run(actions.setUnitParam(item.id, 'openFronts', v))));
+
   if (item.features?.length) {
     const featureBody = addSection(body, 'features', 'Worktop features');
     for (const feature of item.features) {
@@ -236,6 +239,7 @@ function renderModulePanel(body, item, module) {
   handleBody.appendChild(segmented(HANDLE_OPTIONS, module.handle ?? 'bar', (v) => run(actions.setModuleParam(item.id, module.id, 'handle', v))));
 
   const actionsBody = addSection(body, 'actions', 'Actions');
+  actionsBody.appendChild(toggle('Open fronts', item.openFronts === true, (v) => run(actions.setUnitParam(item.id, 'openFronts', v))));
   actionsBody.appendChild(
     button('Duplicate', () => {
       const clone = structuredClone({ type: module.type, width: module.width, handle: module.handle, compartments: effectiveCompartments(module).map(({ id, ...c }) => c) });
