@@ -3,10 +3,17 @@ import { store } from '../state/store.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
 // Not for application code — the app itself must go through the store.
-export function installDebugApi({ camera, controls, ready }) {
+export function installDebugApi({ camera, controls, renderer, ready }) {
   window.__app = {
     // Resolves after the first rendered frame.
     ready,
+
+    // For harness assertions (e.g. proving disposal keeps geometry flat).
+    store,
+    getRendererInfo: () => ({
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+    }),
 
     setCamera(preset) {
       applyCameraPreset(camera, controls, preset);

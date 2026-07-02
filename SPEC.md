@@ -84,8 +84,10 @@ Updated whenever a feature lands (see CLAUDE.md).
       defaults, fixtures; 3D layer rebuilds only affected items
 - [x] **P4 — Room shell**: floor and walls generated from `room` params, wall
       and floor materials
-- [ ] **P5 — Cabinet module generator**: carcass, doors, drawers, handles;
+- [x] **P5 — Cabinet module generator**: carcass, doors, drawers, handles;
       compartments with proportional weights and fixed-height slots
+      *(drawers + weighted compartments still pending; single shaker door,
+      three handle styles, hollow carcass and plinth landed)*
 - [ ] **P6 — Run generator**: modules laid out in a row with fronts gap,
       worktop and plinth
 - [ ] **P7 — Unit types**: wall, tall and island runs with correct heights,

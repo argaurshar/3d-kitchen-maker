@@ -6,10 +6,12 @@ const STUDIO_SIZE = 40;
 const GRID_EXTENT = 12;
 const GRID_STEP = 1;
 
-// Y offsets keep the coplanar studio layers from z-fighting.
+// Y offsets keep the coplanar studio layers from z-fighting. Items are
+// placed on the room floor plane by the projection layer.
+export const FLOOR_TOP_Y = 0.02;
 const Y_SHADOW_CATCHER = 0.005;
 const Y_GRID = 0.01;
-const Y_ROOM_FLOOR = 0.02;
+const Y_ROOM_FLOOR = FLOOR_TOP_Y;
 
 // Pure generator: (roomParams) => THREE.Group (see CLAUDE.md).
 // Builds the room shell plus the "studio" surroundings: a background-neutral
