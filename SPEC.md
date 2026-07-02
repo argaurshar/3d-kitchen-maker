@@ -80,13 +80,13 @@ Updated whenever a feature lands (see CLAUDE.md).
       with orbit controls and ground plane
 - [x] **P2 — Screenshot harness**: `tools/shot.mjs` renders deterministic views
       of the running app into `shots/` via Playwright
-- [ ] **P3 — State store**: JSON scene store with subscribe/notify, schema
+- [x] **P3 — State store**: JSON scene store with subscribe/notify, schema
       defaults, fixtures; 3D layer rebuilds only affected items
 - [x] **P4 — Room shell**: floor and walls generated from `room` params, wall
       and floor materials
 - [x] **P5 — Cabinet module generator**: carcass, doors, drawers, handles;
       compartments with proportional weights and fixed-height slots
-- [ ] **P6 — Run generator**: modules laid out in a row with fronts gap,
+- [x] **P6 — Run generator**: modules laid out in a row with fronts gap,
       worktop and plinth
 - [ ] **P7 — Unit types**: wall, tall and island runs with correct heights,
       depths and mounting *(tall + wall landed with the compartment stack;

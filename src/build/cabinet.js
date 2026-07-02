@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
-import { box } from './util.js';
+import { box, cylinder } from './util.js';
 import { buildCompartmentStack } from './compartments.js';
+import { buildDoorFronts } from './fronts.js';
 
 const P = DIMS.panelThickness;
 const DOOR_CLEARANCE = 0.003;
@@ -33,13 +34,110 @@ export function buildModule(module, ctx, matLib) {
     group.add(plinth);
   }
 
-  const stack = buildCompartmentStack(module, ctx, matLib, tag);
-  if (stack) {
-    group.add(stack);
-  } else {
-    group.add(buildOverflowWarning(width, ctx, tag));
+  switch (module.type) {
+    case 'dishwasher':
+      addDishwasherFront(group, module, ctx, matLib, tag);
+      break;
+    case 'filler':
+      addFillerFront(group, width, ctx, matLib, tag);
+      break;
+    case 'blindCorner':
+      addBlindCornerFronts(group, module, ctx, matLib, tag);
+      break;
+    default: {
+      const stack = buildCompartmentStack(module, ctx, matLib, tag);
+      if (stack) group.add(stack);
+      else group.add(buildOverflowWarning(width, ctx, tag));
+    }
   }
   return group;
+}
+
+const INSET = DIMS.frontGap / 2;
+
+function frontRect(width, ctx) {
+  return {
+    x0: INSET,
+    x1: width - INSET,
+    y0: ctx.yBase + INSET,
+    y1: ctx.yBase + ctx.carcassHeight - INSET,
+  };
+}
+
+// Integrated look: flat dark panel, thin control strip along the top edge.
+function addDishwasherFront(group, module, ctx, matLib, tag) {
+  const rect = frontRect(module.width, ctx);
+  const w = rect.x1 - rect.x0;
+  const h = rect.y1 - rect.y0;
+  const zBack = ctx.carcassDepth + 0.003;
+  const t = tag('applianceBody');
+
+  const front = box(w, h, DIMS.frontThickness, matLib.get('appliance_dark'), t);
+  front.position.set(rect.x0 + w / 2, rect.y0 + h / 2, zBack + DIMS.frontThickness / 2);
+  group.add(front);
+
+  const strip = box(w - 0.02, 0.045, 0.004, matLib.get('metal_steel'), t);
+  strip.position.set(rect.x0 + w / 2, rect.y1 - 0.033, zBack + DIMS.frontThickness + 0.002);
+  group.add(strip);
+
+  if ((module.handle ?? 'bar') === 'bar') {
+    const bar = cylinder(0.005, Math.min(0.5, w - 0.15), matLib.get(ctx.materials.handle), tag('handle'));
+    bar.rotation.z = Math.PI / 2;
+    bar.position.set(rect.x0 + w / 2, rect.y1 - 0.085, zBack + DIMS.frontThickness + 0.018);
+    group.add(bar);
+  }
+}
+
+// A plain full-height strip panel in the door material.
+function addFillerFront(group, width, ctx, matLib, tag) {
+  const rect = frontRect(width, ctx);
+  const zBack = ctx.carcassDepth + 0.003;
+  const panel = box(rect.x1 - rect.x0, rect.y1 - rect.y0, DIMS.frontThickness, matLib.get(ctx.materials.door), tag('doorFront'));
+  panel.position.set(width / 2, ctx.yBase + ctx.carcassHeight / 2, zBack + DIMS.frontThickness / 2);
+  group.add(panel);
+}
+
+// Door on the exposed half, blank flat panel on the buried half.
+// module.blindSide ('L' default) says which half is buried.
+function addBlindCornerFronts(group, module, ctx, matLib, tag) {
+  const rect = frontRect(module.width, ctx);
+  const zBack = ctx.carcassDepth + 0.003;
+  const mid = module.width / 2;
+  const blindLeft = (module.blindSide ?? 'L') === 'L';
+  const blankRect = blindLeft
+    ? { ...rect, x1: mid - DIMS.frontGap / 2 }
+    : { ...rect, x0: mid + DIMS.frontGap / 2 };
+  const doorRect = blindLeft
+    ? { ...rect, x0: mid + DIMS.frontGap / 2 }
+    : { ...rect, x1: mid - DIMS.frontGap / 2 };
+
+  const blank = box(
+    blankRect.x1 - blankRect.x0,
+    blankRect.y1 - blankRect.y0,
+    DIMS.frontThickness,
+    matLib.get(ctx.materials.door),
+    tag('doorFront')
+  );
+  blank.position.set(
+    (blankRect.x0 + blankRect.x1) / 2,
+    (blankRect.y0 + blankRect.y1) / 2,
+    zBack + DIMS.frontThickness / 2
+  );
+  group.add(blank);
+
+  const comp = (module.compartments ?? [])[0];
+  for (const leaf of buildDoorFronts({
+    rect: doorRect,
+    zBack,
+    hinge: comp?.style?.hinge ?? (blindLeft ? 'R' : 'L'),
+    glassMat: comp?.style?.glass ? matLib.get('glass_tint') : null,
+    doorMat: matLib.get(ctx.materials.door),
+    handleStyle: module.handle ?? 'bar',
+    handleMat: matLib.get(ctx.materials.handle),
+    tag: (role, extra) => tag(role, { compartmentId: comp?.id, ...extra }),
+  })) {
+    group.add(leaf);
+  }
 }
 
 // Translucent red box over the whole module when the compartment stack

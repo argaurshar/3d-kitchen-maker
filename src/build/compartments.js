@@ -4,7 +4,7 @@ import { box, cylinder } from './util.js';
 import { buildDoorFronts, buildDrawerFront } from './fronts.js';
 
 const GAP = DIMS.frontGap;
-const INSET = 0.003;
+const INSET = DIMS.frontGap / 2; // half-gap at edges -> 0.003 between neighbor modules
 const MIN_FLEX = 0.1;
 const EPS = 1e-9;
 
@@ -12,6 +12,20 @@ export const FIXED_HEIGHTS = {
   oven: DIMS.ovenHeight,
   microwave: DIMS.microwaveHeight,
 };
+
+// Modules without stored compartments fall back to a type preset
+// (drawerBase = 4 equal drawers). Shared by the renderer, validation and
+// the action layer (which materializes it before editing).
+export function effectiveCompartments(module) {
+  if (module.compartments?.length) return module.compartments;
+  if (module.type === 'drawerBase') {
+    return [1, 2, 3, 4].map((n) => ({ id: `${module.id}-d${n}`, type: 'drawer', weight: 1 }));
+  }
+  if (module.type === 'cabinet' || module.type === 'blindCorner') {
+    return [{ id: `${module.id}-door`, type: 'door', style: { hinge: 'L', glass: false }, shelvesInside: 1, weight: 1 }];
+  }
+  return [];
+}
 
 // Fixed compartments take their height; the rest share the leftover
 // proportionally to weight, waterfall-clamped to the 0.10 minimum.
@@ -54,7 +68,7 @@ export function solveHeights(compartments, H) {
 // Builds the full front stack (top to bottom). Returns null on overflow —
 // the caller renders the warning box instead.
 export function buildCompartmentStack(module, ctx, matLib, tag) {
-  const compartments = module.compartments ?? [];
+  const compartments = effectiveCompartments(module);
   const solved = solveHeights(compartments, ctx.carcassHeight);
   if (solved.error) return null;
 
