@@ -3,7 +3,7 @@ import { store } from '../state/store.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
 // Not for application code — the app itself must go through the store.
-export function installDebugApi({ camera, controls, renderer, ready, openDoors }) {
+export function installDebugApi({ camera, controls, renderer, ready, openDoors, panel }) {
   window.__app = {
     // Resolves after the first rendered frame.
     ready,
@@ -34,7 +34,9 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors }
       store.replace(await response.json());
     },
 
-    // No-op until picking lands in Prompt 8.
-    select(itemId) {},
+    // Opens the properties panel; real picking lands in Prompt 8.
+    select(itemId) {
+      panel?.select(itemId);
+    },
   };
 }
