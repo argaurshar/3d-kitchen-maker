@@ -2,12 +2,14 @@ import * as THREE from 'three';
 import { highlightFor } from './highlight.js';
 import { createGizmo } from './gizmo.js';
 import { createPlacement } from './placement.js';
+import { createGhost } from './ghost.js';
 import { store } from '../state/store.js';
+import { addItem, removeItem as removeItemAction } from '../state/actions.js';
 
 // Interaction coordinator: hover highlight, click select, escape deselect,
 // and pointer routing to the gizmo (rotate) and placement (move) drags.
 // OrbitControls are disabled for the duration of any drag.
-export function createPicker({ scene, camera, renderer, controls, projection, panel, runButtons }) {
+export function createPicker({ scene, camera, renderer, controls, projection, panel, runButtons, onPlacementEnd, onPaintAttempt }) {
   const raycaster = new THREE.Raycaster();
   raycaster.params.Line = { threshold: 0.001 };
   const pointer = new THREE.Vector2();
@@ -15,7 +17,9 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
 
   const gizmo = createGizmo(scene);
   const placement = createPlacement(scene);
+  const ghost = createGhost(scene);
 
+  let tool = 'select'; // 'select' | 'paint' | 'delete'
   let hoveredId = null;
   let selectedId = null;
   let dragging = null; // 'gizmo' | 'item'
@@ -32,9 +36,15 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
 
   function pick(event) {
     castFrom(event);
+    // Freshly added groups may not have rendered a frame yet; raycasting
+    // reads matrixWorld directly, so keep it current.
+    scene.updateMatrixWorld(true);
     const hits = raycaster.intersectObjects(scene.children, true);
     for (const hit of hits) {
       if (!hit.object.visible) continue;
+      // Surfaces the camera is embedded in (e.g. orbiting into a wall's
+      // skin) are never meaningful pick targets.
+      if (hit.distance < 0.05) continue;
       const ud = hit.object.userData;
       if (ud.gizmoDot) return { kind: 'gizmoDot', point: hit.point };
       if (ud.gizmo) continue;
@@ -111,6 +121,11 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
   );
 
   dom.addEventListener('pointermove', (event) => {
+    if (ghost.active()) {
+      castFrom(event);
+      ghost.update(raycaster, store.get(), placement.getSnap());
+      return;
+    }
     if (dragging === 'gizmo') {
       castFrom(event);
       gizmo.dragMove(raycaster, event.shiftKey || placement.getSnap());
@@ -140,13 +155,57 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
     const moved = Math.hypot(event.clientX - downAt[0], event.clientY - downAt[1]);
     downAt = null;
     if (moved > 5) return; // was an orbit, not a click
+
+    if (ghost.active()) {
+      const item = ghost.commit();
+      if (!item) return; // e.g. wall unit not wall-snapped yet
+      const result = addItem(item);
+      if (result.ok) {
+        ghost.cancel();
+        select(result.id);
+        onPlacementEnd?.();
+      }
+      return;
+    }
     const hit = pick(event);
+    if (tool === 'delete') {
+      if (hit.kind === 'item') {
+        if (hit.itemId === selectedId) select(null);
+        removeItemAction(hit.itemId);
+      }
+      return;
+    }
+    if (tool === 'paint') {
+      if (hit.kind === 'item') onPaintAttempt?.();
+      return;
+    }
     if (hit.kind === 'item') select(hit.itemId);
     else if (hit.kind === 'floor') select(null);
   });
 
+  dom.addEventListener('contextmenu', (event) => {
+    if (ghost.active()) {
+      event.preventDefault();
+      cancelPlacement();
+    }
+  });
+
+  function cancelPlacement() {
+    if (!ghost.active()) return;
+    ghost.cancel();
+    dom.style.cursor = '';
+    onPlacementEnd?.();
+  }
+
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') select(null);
+    if (event.key === 'Escape') {
+      if (ghost.active()) cancelPlacement();
+      else select(null);
+    } else if ((event.key === 'Delete' || event.key === 'Backspace') && selectedId && !ghost.active()) {
+      const id = selectedId;
+      select(null);
+      removeItemAction(id);
+    }
   });
 
   function update() {
@@ -170,5 +229,32 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
     getSelectedId: () => selectedId,
     isDragging: () => Boolean(dragging),
     gizmoDotWorld: () => gizmo.dot.getWorldPosition(new THREE.Vector3()).toArray(),
+
+    setTool(t) {
+      tool = t;
+      cancelPlacement();
+      if (t !== 'select') select(null);
+    },
+    getTool: () => tool,
+    beginPlacement(kind) {
+      select(null);
+      ghost.begin(kind);
+      dom.style.cursor = 'copy';
+    },
+    isPlacing: () => ghost.active(),
+
+    // Harness helper: what a click at these client coords would hit.
+    pickAt(clientX, clientY, raw = false) {
+      const hit = pick({ clientX, clientY });
+      if (!raw) return { kind: hit.kind, itemId: hit.itemId ?? null };
+      castFrom({ clientX, clientY });
+      scene.updateMatrixWorld(true);
+      return raycaster.intersectObjects(scene.children, true).slice(0, 6).map((h) => ({
+        name: h.object.name || h.object.type,
+        itemId: h.object.userData.itemId ?? null,
+        visible: h.object.visible,
+        d: Number(h.distance.toFixed(2)),
+      }));
+    },
   };
 }

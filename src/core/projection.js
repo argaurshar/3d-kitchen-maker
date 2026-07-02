@@ -1,15 +1,35 @@
 import * as THREE from 'three';
 import { buildRoom, updateWallVisibility, FLOOR_TOP_Y } from './room.js';
 import { buildRun, unitContext } from '../build/run.js';
+import { buildPlaceholder } from '../build/placeholder.js';
 import { solveHeights } from '../build/compartments.js';
 import { disposeGroup } from './dispose.js';
 import { materialLibrary } from '../materials/library.js';
 import { store } from '../state/store.js';
 
+// Clay ("Solid") mode: every item mesh renders in one shared matte white.
+// Real materials are pointer-swapped into userData and restored on toggle.
+const clayMaterial = new THREE.MeshStandardMaterial({ color: 0xf0efec, roughness: 0.9, metalness: 0 });
+clayMaterial.userData.shared = true;
+
+function applyClay(group, on) {
+  group.traverse((node) => {
+    if (!node.isMesh) return;
+    if (on && !node.userData.realMaterial) {
+      node.userData.realMaterial = node.material;
+      node.material = clayMaterial;
+    } else if (!on && node.userData.realMaterial) {
+      node.material = node.userData.realMaterial;
+      delete node.userData.realMaterial;
+    }
+  });
+}
+
 // The 3D layer: a pure projection of the store's Scene JSON. Subscribes to
 // the store and rebuilds only what a change affects (see CLAUDE.md).
 export function createProjection(scene) {
   let roomGroup = null;
+  let clay = false;
   const itemGroups = new Map(); // item id -> THREE.Group
 
   function rebuildRoom() {
@@ -23,6 +43,7 @@ export function createProjection(scene) {
 
   function buildItemGroup(item) {
     if (item.kind === 'run') return buildRun(item, materialLibrary);
+    if (item.kind === 'appliance' || item.kind === 'furniture') return buildPlaceholder(item);
     console.warn(`projection: no builder for item kind "${item.kind}" yet`);
     return new THREE.Group();
   }
@@ -39,6 +60,7 @@ export function createProjection(scene) {
     removeItem(item.id);
     const group = buildItemGroup(item);
     group.position.y += FLOOR_TOP_Y; // items sit on the room floor plane
+    if (clay) applyClay(group, true);
     itemGroups.set(item.id, group);
     scene.add(group);
     validateItem(item);
@@ -91,5 +113,10 @@ export function createProjection(scene) {
     getItemGroup(id) {
       return itemGroups.get(id) ?? null;
     },
+    setClay(on) {
+      clay = Boolean(on);
+      for (const group of itemGroups.values()) applyClay(group, clay);
+    },
+    isClay: () => clay,
   };
 }

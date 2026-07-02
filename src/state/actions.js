@@ -235,7 +235,7 @@ export function addItem(item) {
   const id = item.id ?? uniqueId('item');
   if (items.some((i) => i.id === id)) return fail(`duplicate id "${id}"`);
   store.set('items', [...items, { ...item, id }]);
-  return ok();
+  return { ok: true, id };
 }
 
 export function removeItem(itemId) {

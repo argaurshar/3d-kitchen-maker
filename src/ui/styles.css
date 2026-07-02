@@ -255,3 +255,85 @@ input[type='range'] {
 .pill-btn:hover { background: #4a545e; }
 .plus-btn.hidden,
 .pill-btn.hidden { display: none; }
+
+/* ---------- Bottom toolbar ---------- */
+
+.toolbar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  background: #26282cf0;
+  border-radius: 999px;
+  padding: 6px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  z-index: 11;
+}
+.tb-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  color: #9aa0a8;
+  padding: 5px 11px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 10.5px;
+}
+.tb-item:hover { background: #33363b; color: #d6d9dd; }
+.tb-item.active { color: #ffffff; }
+.tb-item.active .tb-label { font-weight: 700; }
+.tb-item.on { color: #a9c39a; }
+.tb-item.on .tb-label { font-weight: 700; }
+.tb-item svg { display: block; }
+.tb-collapse { justify-content: center; padding: 5px 7px; }
+.toolbar.collapsed .tb-item:not(.tb-collapse) { display: none; }
+.toolbar.collapsed .tb-collapse svg { transform: rotate(180deg); }
+
+.furnish-row {
+  position: fixed;
+  bottom: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  background: #26282cf0;
+  border-radius: 999px;
+  padding: 6px 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 11;
+}
+.furnish-row.hidden { display: none; }
+.furnish-item {
+  border: 0;
+  background: transparent;
+  color: #c9ccd1;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.furnish-item:hover { background: #4a545e; color: #fff; }
+
+.toast {
+  position: fixed;
+  bottom: 132px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #26282cf5;
+  color: #e6e7e9;
+  font-size: 12.5px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 12;
+  transition: opacity 0.5s ease;
+}
+.toast.fade { opacity: 0; }

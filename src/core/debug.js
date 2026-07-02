@@ -4,7 +4,7 @@ import { store } from '../state/store.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
 // Not for application code — the app itself must go through the store.
-export function installDebugApi({ camera, controls, renderer, ready, openDoors, picker }) {
+export function installDebugApi({ camera, controls, renderer, ready, openDoors, picker, projection }) {
   window.__app = {
     // Resolves after the first rendered frame.
     ready,
@@ -57,5 +57,14 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
       return world ? window.__app.project(world) : null;
     },
     getCameraPosition: () => camera.position.toArray(),
+    pickAt: (x, y, raw) => picker?.pickAt(x, y, raw),
+
+    // Distinct material names on an item's meshes (clay-mode assertions).
+    getItemMaterials(itemId) {
+      const group = projection?.getItemGroup(itemId);
+      const names = new Set();
+      group?.traverse((n) => n.isMesh && names.add(n.material.name || 'unnamed'));
+      return [...names];
+    },
   };
 }

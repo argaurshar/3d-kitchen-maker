@@ -9,6 +9,8 @@ export function disposeGroup(root) {
       : node.material
         ? [node.material]
         : [];
+    // Clay mode swaps the live material; the real one hides in userData.
+    if (node.userData?.realMaterial) materials.push(node.userData.realMaterial);
     for (const material of materials) {
       if (material.userData?.shared) continue;
       for (const value of Object.values(material)) {

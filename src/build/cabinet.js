@@ -70,13 +70,12 @@ function addDishwasherFront(group, module, ctx, matLib, tag) {
   const w = rect.x1 - rect.x0;
   const h = rect.y1 - rect.y0;
   const zBack = ctx.carcassDepth + 0.003;
-  const t = tag('applianceBody');
 
-  const front = box(w, h, DIMS.frontThickness, matLib.get('appliance_dark'), t);
+  const front = box(w, h, DIMS.frontThickness, matLib.get('appliance_dark'), tag('applianceBody'));
   front.position.set(rect.x0 + w / 2, rect.y0 + h / 2, zBack + DIMS.frontThickness / 2);
   group.add(front);
 
-  const strip = box(w - 0.02, 0.045, 0.004, matLib.get('metal_steel'), t);
+  const strip = box(w - 0.02, 0.045, 0.004, matLib.get('metal_steel'), tag('applianceBody'));
   strip.position.set(rect.x0 + w / 2, rect.y1 - 0.033, zBack + DIMS.frontThickness + 0.002);
   group.add(strip);
 

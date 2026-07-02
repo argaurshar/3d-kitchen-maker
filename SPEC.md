@@ -96,7 +96,10 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [x] **P9 — Side panel**: live editing of the selected item's parameters,
       modules and compartments
 - [ ] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
-- [ ] **P11 — Furniture**: parametric stools
+      *(labeled placeholder boxes placeable from the toolbar; real generators
+      pending)*
+- [ ] **P11 — Furniture**: parametric stools *(placeholder placeable; real
+      generator pending)*
 - [x] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping
       to walls and neighboring runs
 - [ ] **P13 — Paint mode**: per-surface material painting via radial swatch
