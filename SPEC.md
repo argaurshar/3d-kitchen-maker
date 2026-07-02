@@ -93,7 +93,7 @@ Updated whenever a feature lands (see CLAUDE.md).
       island pending)*
 - [ ] **P8 — Picking & selection**: raycast picking via `userData`, selection
       highlight
-- [ ] **P9 — Side panel**: live editing of the selected item's parameters,
+- [x] **P9 — Side panel**: live editing of the selected item's parameters,
       modules and compartments
 - [ ] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
 - [ ] **P11 — Furniture**: parametric stools
