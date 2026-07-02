@@ -95,9 +95,9 @@ Updated whenever a feature lands (see CLAUDE.md).
       highlight
 - [x] **P9 — Side panel**: live editing of the selected item's parameters,
       modules and compartments
-- [ ] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
-      *(labeled placeholder boxes placeable from the toolbar; real generators
-      pending)*
+- [x] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
+      *(hob/sink/tap are worktop features on `run.features`; fridge has the
+      full type/finish/dimensions panel)*
 - [ ] **P11 — Furniture**: parametric stools *(placeholder placeable; real
       generator pending)*
 - [x] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping

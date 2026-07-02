@@ -238,6 +238,71 @@ export function addItem(item) {
   return { ok: true, id };
 }
 
+const FEATURE_TYPES = ['hob', 'sink', 'tap'];
+const FEATURE_MARGIN = 0.3;
+
+// Worktop features (hob/sink/tap) live on a run and move with it.
+// Taps require a sink on the same run and snap to its offset.
+export function addFeature(itemId, feature) {
+  const { index, item } = findItem(itemId);
+  if (!item) return fail(`no item "${itemId}"`);
+  if (item.kind !== 'run' || item.worktop === false) return fail('features need a run with a worktop');
+  if (!FEATURE_TYPES.includes(feature?.type)) return fail(`unknown feature type "${feature?.type}"`);
+  const runWidth = (item.modules ?? []).reduce((s, m) => s + m.width, 0);
+  let offsetX = Number(feature.offsetX);
+  if (!Number.isFinite(offsetX)) return fail('offsetX must be a number');
+  offsetX = Math.min(Math.max(offsetX, FEATURE_MARGIN), runWidth - FEATURE_MARGIN);
+  if (runWidth < 2 * FEATURE_MARGIN) return fail('run too narrow for a feature');
+  if (feature.type === 'tap') {
+    const sink = (item.features ?? []).find((f) => f.type === 'sink' && Math.abs(f.offsetX - offsetX) < 0.4);
+    if (!sink) return fail('tap needs a sink nearby');
+    offsetX = sink.offsetX;
+  }
+  const features = [...(item.features ?? []), { id: uniqueId('f'), ...feature, offsetX }];
+  store.set(`items.${index}.features`, features);
+  return ok();
+}
+
+export function removeFeature(itemId, featureId) {
+  const { index, item } = findItem(itemId);
+  if (!item) return fail(`no item "${itemId}"`);
+  const features = (item.features ?? []).filter((f) => f.id !== featureId);
+  if (features.length === (item.features ?? []).length) return fail(`no feature "${featureId}"`);
+  store.set(`items.${index}.features`, features);
+  return ok();
+}
+
+// Validated appliance param writes (fridge/hood/hob-feature params live in
+// item.params). Spec: [validator, message].
+const APPLIANCE_PARAMS = {
+  fridge: {
+    type: (v) => ['topFreezer', 'bottomFreezer', 'sideBySide', 'frenchDoor'].includes(v),
+    finish: (v) => ['white', 'stainless', 'brushedSteel', 'blackSteel', 'brushedBrass', 'champagne'].includes(v),
+    width: (v) => typeof v === 'number' && v >= 0.6 && v <= 1.2,
+    height: (v) => typeof v === 'number' && v >= 1.4 && v <= 2.1,
+    depth: (v) => typeof v === 'number' && v >= 0.6 && v <= 0.85,
+    openDoors: (v) => typeof v === 'boolean',
+    handles: (v) => ['bar', 'recessed'].includes(v),
+    dispenser: (v) => typeof v === 'boolean',
+  },
+  hood: {
+    width: (v) => typeof v === 'number' && v >= 0.5 && v <= 1.2,
+    finish: (v) => ['stainless', 'blackSteel'].includes(v),
+  },
+};
+
+export function setApplianceParam(itemId, key, value) {
+  const { index, item } = findItem(itemId);
+  if (!item) return fail(`no item "${itemId}"`);
+  const spec = APPLIANCE_PARAMS[item.applianceType];
+  if (!spec) return fail(`no editable params for "${item.applianceType}"`);
+  const validate = spec[key];
+  if (!validate) return fail(`unknown param "${key}"`);
+  if (!validate(value)) return fail(`invalid ${key}: ${value}`);
+  store.set(`items.${index}.params`, { ...item.params, [key]: value });
+  return ok();
+}
+
 export function removeItem(itemId) {
   const items = store.get().items;
   const next = items.filter((i) => i.id !== itemId);

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { buildRoom, updateWallVisibility, FLOOR_TOP_Y } from './room.js';
 import { buildRun, unitContext } from '../build/run.js';
 import { buildPlaceholder } from '../build/placeholder.js';
+import { buildFridge } from '../build/appliances/fridge.js';
+import { buildHood } from '../build/appliances/hood.js';
 import { solveHeights } from '../build/compartments.js';
 import { disposeGroup } from './dispose.js';
 import { materialLibrary } from '../materials/library.js';
@@ -43,6 +45,13 @@ export function createProjection(scene) {
 
   function buildItemGroup(item) {
     if (item.kind === 'run') return buildRun(item, materialLibrary);
+    if (item.kind === 'appliance' && item.applianceType === 'fridge') {
+      const group = buildFridge(item, materialLibrary);
+      group.position.set(item.position?.[0] ?? 0, 0, item.position?.[1] ?? 0);
+      group.rotation.y = item.rotationY ?? 0;
+      return group;
+    }
+    if (item.kind === 'appliance' && item.applianceType === 'hood') return buildHood(item, materialLibrary);
     if (item.kind === 'appliance' || item.kind === 'furniture') return buildPlaceholder(item);
     console.warn(`projection: no builder for item kind "${item.kind}" yet`);
     return new THREE.Group();

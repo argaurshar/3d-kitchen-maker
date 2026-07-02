@@ -52,6 +52,11 @@
             { "id": "b5c1", "type": "door", "style": { "hinge": "R", "glass": false }, "shelvesInside": 1, "weight": 1 }
           ]
         }
+      ],
+      "features": [
+        { "id": "f-sink", "type": "sink", "offsetX": 0.9, "params": {} },
+        { "id": "f-tap", "type": "tap", "offsetX": 0.9, "params": {} },
+        { "id": "f-hob", "type": "hob", "offsetX": 2.1, "params": { "burners": 4 } }
       ]
     },
     {
@@ -127,6 +132,22 @@
           ]
         }
       ]
+    },
+    {
+      "id": "fridge-1",
+      "kind": "appliance",
+      "applianceType": "fridge",
+      "position": [1.7, -2.5],
+      "rotationY": 0,
+      "params": { "type": "sideBySide", "finish": "stainless" }
+    },
+    {
+      "id": "hood-1",
+      "kind": "appliance",
+      "applianceType": "hood",
+      "position": [-1.1, -2.5],
+      "rotationY": 0,
+      "params": {}
     }
   ]
 }

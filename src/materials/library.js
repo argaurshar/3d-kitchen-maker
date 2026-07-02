@@ -17,9 +17,10 @@ export class MaterialLibrary {
     const swatch = this.swatches.get(id);
     let material;
     if (swatch) {
-      const { map, ...params } = swatch.params;
+      const { map, roughnessMap, ...params } = swatch.params;
       material = new THREE.MeshStandardMaterial(params);
       if (map) material.map = map();
+      if (roughnessMap) material.roughnessMap = roughnessMap();
     } else {
       console.warn(`MaterialLibrary: unknown material id "${id}"`);
       material = new THREE.MeshStandardMaterial({ color: 0xff00ff });

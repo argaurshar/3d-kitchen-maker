@@ -4,7 +4,7 @@ import { createGizmo } from './gizmo.js';
 import { createPlacement } from './placement.js';
 import { createGhost } from './ghost.js';
 import { store } from '../state/store.js';
-import { addItem, removeItem as removeItemAction } from '../state/actions.js';
+import { addItem, addFeature, removeItem as removeItemAction } from '../state/actions.js';
 
 // Interaction coordinator: hover highlight, click select, escape deselect,
 // and pointer routing to the gizmo (rotate) and placement (move) drags.
@@ -157,12 +157,13 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
     if (moved > 5) return; // was an orbit, not a click
 
     if (ghost.active()) {
-      const item = ghost.commit();
-      if (!item) return; // e.g. wall unit not wall-snapped yet
-      const result = addItem(item);
+      const commit = ghost.commit();
+      if (!commit) return; // e.g. wall unit not wall-snapped yet
+      const isFeature = commit.kind === 'feature';
+      const result = isFeature ? addFeature(commit.targetItemId, commit.feature) : addItem(commit);
       if (result.ok) {
         ghost.cancel();
-        select(result.id);
+        select(isFeature ? commit.targetItemId : result.id);
         onPlacementEnd?.();
       }
       return;

@@ -109,3 +109,23 @@ export function makeWoodTexture({
   texture.userData.worldSize = worldSize;
   return texture;
 }
+
+// Horizontal micro-stripes used as a roughnessMap to fake brushed-metal
+// anisotropy. `strength` widens the roughness variation between lines.
+export function makeBrushedTexture({ size = 256, strength = 0.5, seed = 40 } = {}) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const random = seededRandom(seed);
+  for (let y = 0; y < size; y += 1) {
+    const v = Math.round(150 + (random() - 0.5) * 2 * strength * 100);
+    ctx.fillStyle = `rgb(${v},${v},${v})`;
+    ctx.fillRect(0, y, size, 1);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 4;
+  return texture;
+}

@@ -75,5 +75,22 @@ check('moveItem refuses bad position', actions.moveItem('tmp-run', [1], 0), fals
 check('removeItem', actions.removeItem('tmp-run'));
 check('removeItem refuses unknown id', actions.removeItem('tmp-run'), false);
 
+// --- feature + appliance param actions ---
+check('addFeature hob', actions.addFeature('base-run', { type: 'hob', offsetX: 2.1, params: { burners: 4 } }));
+check('addFeature refuses tap without sink', actions.addFeature('base-run', { type: 'tap', offsetX: 2.1 }), false);
+check('addFeature sink then tap snaps to it', actions.addFeature('base-run', { type: 'sink', offsetX: 0.9 }));
+check('addFeature tap near sink', actions.addFeature('base-run', { type: 'tap', offsetX: 1.1 }));
+const tap = store.get().items[0].features.at(-1);
+console.log(`${tap.offsetX === 0.9 ? 'ok  ' : 'FAIL'} tap snapped to sink offset (${tap.offsetX})`);
+if (tap.offsetX !== 0.9) failures += 1;
+check('removeFeature', actions.removeFeature('base-run', tap.id));
+check('addFeature refuses on wall run', actions.addFeature('wall-run', { type: 'hob', offsetX: 0.9 }), false);
+
+check('addItem fridge', actions.addItem({ id: 'smoke-fridge', kind: 'appliance', applianceType: 'fridge', position: [0, 0], rotationY: 0, params: {} }));
+check('setApplianceParam type', actions.setApplianceParam('smoke-fridge', 'type', 'frenchDoor'));
+check('setApplianceParam refuses bad width', actions.setApplianceParam('smoke-fridge', 'width', 2), false);
+check('setApplianceParam refuses bad finish', actions.setApplianceParam('smoke-fridge', 'finish', 'gold'), false);
+actions.removeItem('smoke-fridge');
+
 console.log(failures === 0 ? '\nALL ACTIONS OK' : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

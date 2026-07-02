@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createRenderer } from './core/renderer.js';
+import { createRenderer, attachEnvironment } from './core/renderer.js';
 import { createCamera, createControls, applyCameraPreset } from './core/camera.js';
 import { createLights, applyLightPreset } from './core/lights.js';
 import { createProjection } from './core/projection.js';
@@ -16,6 +16,7 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xececec);
+attachEnvironment(renderer, scene);
 
 const camera = createCamera();
 const controls = createControls(camera, renderer.domElement);
