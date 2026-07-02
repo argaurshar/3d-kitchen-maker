@@ -224,3 +224,34 @@ input[type='range'] {
 }
 .style-row { flex-wrap: wrap; }
 .style-row .seg { flex: 1 1 100%; margin: 2px 0; }
+
+/* ---------- Selection overlay buttons ---------- */
+
+.plus-btn,
+.pill-btn {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+  border: 0;
+  cursor: pointer;
+  background: #26282cf0;
+  color: #e6e7e9;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+.plus-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+}
+.plus-btn:hover { background: #4a545e; }
+.pill-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pill-btn:hover { background: #4a545e; }
+.plus-btn.hidden,
+.pill-btn.hidden { display: none; }

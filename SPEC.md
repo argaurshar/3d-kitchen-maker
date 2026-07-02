@@ -91,13 +91,13 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [ ] **P7 — Unit types**: wall, tall and island runs with correct heights,
       depths and mounting *(tall + wall landed with the compartment stack;
       island pending)*
-- [ ] **P8 — Picking & selection**: raycast picking via `userData`, selection
+- [x] **P8 — Picking & selection**: raycast picking via `userData`, selection
       highlight
 - [x] **P9 — Side panel**: live editing of the selected item's parameters,
       modules and compartments
 - [ ] **P10 — Appliances**: fridge, sink, hob, tap, hood generated from params
 - [ ] **P11 — Furniture**: parametric stools
-- [ ] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping
+- [x] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping
       to walls and neighboring runs
 - [ ] **P13 — Paint mode**: per-surface material painting via radial swatch
       wheel

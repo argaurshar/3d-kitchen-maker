@@ -107,6 +107,7 @@ function buildStudioGrid(width, depth) {
   );
   grid.name = 'studioGrid';
   grid.position.y = Y_GRID;
+  grid.raycast = () => {}; // never intercept picking rays
   return grid;
 }
 

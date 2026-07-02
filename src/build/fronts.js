@@ -26,6 +26,7 @@ function frameWidth(w, h) {
 // z 0..T. glassMat !== null replaces the center panel with a thin pane.
 function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kind, hinge, tag }) {
   const g = new THREE.Group();
+  const role = kind === 'drawer' ? 'drawerFront' : 'doorFront';
   const fw = frameWidth(w, h);
   const cutout = handleStyle === 'cutout';
   const railH = cutout ? Math.max(fw - 0.018, 0.014) : fw;
@@ -38,7 +39,7 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
     { size: [fw, h - fw - railH - 0.018 * cutout, T], pos: [w - fw / 2, fw + (h - fw - railH - 0.018 * cutout) / 2, T / 2] },
   ];
   for (const { size, pos } of frame) {
-    const mesh = box(...size, doorMat, tag('doorFront'));
+    const mesh = box(...size, doorMat, tag(role));
     mesh.position.set(...pos);
     g.add(mesh);
   }
@@ -48,13 +49,13 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
   const innerW = w - 2 * fw + 2 * overlap;
   const innerH = h - fw - railH - 0.018 * cutout + 2 * overlap;
   if (glassMat) {
-    const pane = box(innerW, innerH, 0.004, glassMat, tag('doorFront'));
+    const pane = box(innerW, innerH, 0.004, glassMat, tag(role));
     pane.castShadow = false;
     pane.position.set(w / 2, fw - overlap + innerH / 2, 0.008);
     g.add(pane);
   } else {
     const panelT = T - 0.014;
-    const panel = box(innerW, innerH, panelT, doorMat, tag('doorFront'));
+    const panel = box(innerW, innerH, panelT, doorMat, tag(role));
     panel.position.set(w / 2, fw - overlap + innerH / 2, 0.001 + panelT / 2);
     g.add(panel);
   }

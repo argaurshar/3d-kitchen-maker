@@ -88,5 +88,8 @@ export function createProjection(scene) {
     update(camera) {
       if (roomGroup) updateWallVisibility(roomGroup, camera);
     },
+    getItemGroup(id) {
+      return itemGroups.get(id) ?? null;
+    },
   };
 }

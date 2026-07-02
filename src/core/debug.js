@@ -1,9 +1,10 @@
+import * as THREE from 'three';
 import { applyCameraPreset } from './camera.js';
 import { store } from '../state/store.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
 // Not for application code — the app itself must go through the store.
-export function installDebugApi({ camera, controls, renderer, ready, openDoors, panel }) {
+export function installDebugApi({ camera, controls, renderer, ready, openDoors, picker }) {
   window.__app = {
     // Resolves after the first rendered frame.
     ready,
@@ -34,9 +35,27 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
       store.replace(await response.json());
     },
 
-    // Opens the properties panel; real picking lands in Prompt 8.
+    // Full selection: highlight + gizmo + panel + run buttons.
     select(itemId) {
-      panel?.select(itemId);
+      picker?.select(itemId);
     },
+    getSelection: () => picker?.getSelectedId() ?? null,
+    setSnap: (v) => picker?.setSnap(v),
+
+    // Harness helpers: screen-space projection for scripted pointer input.
+    // Refreshes the camera matrices so results are correct even if no frame
+    // has rendered since the camera moved (slow headless rendering).
+    project(worldPos) {
+      camera.updateMatrixWorld();
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+      const v = new THREE.Vector3(...worldPos).project(camera);
+      const dom = renderer.domElement;
+      return [((v.x + 1) / 2) * dom.clientWidth, ((1 - v.y) / 2) * dom.clientHeight];
+    },
+    getGizmoDotScreen() {
+      const world = picker?.gizmoDotWorld();
+      return world ? window.__app.project(world) : null;
+    },
+    getCameraPosition: () => camera.position.toArray(),
   };
 }

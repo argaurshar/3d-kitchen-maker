@@ -48,14 +48,19 @@ function run(result) {
   }
 }
 
-export function initPanel() {
+let onCloseCallback = null;
+
+export function initPanel({ onClose } = {}) {
+  onCloseCallback = onClose ?? null;
   root = el('div', 'panel hidden');
   document.body.appendChild(root);
   store.subscribe((change) => {
     if (!view || isLiveWrite) return;
     if (change.type === 'replace') return render();
-    const [head, index] = change.path.split('.');
+    const [head, index, ...rest] = change.path.split('.');
     if (head !== 'items') return;
+    // Drag writes (position/rotation) don't affect panel content.
+    if (rest.length === 1 && (rest[0] === 'position' || rest[0] === 'rotationY')) return;
     if (index === undefined || store.get().items[Number(index)]?.id === view.itemId) render();
   });
   return { select };
@@ -105,7 +110,7 @@ function renderHeader(item) {
       render();
     }, 'Collapse')
   );
-  tools.appendChild(iconButton('close', () => select(null), 'Close'));
+  tools.appendChild(iconButton('close', () => (onCloseCallback ? onCloseCallback() : select(null)), 'Close'));
   header.appendChild(tools);
   return header;
 }

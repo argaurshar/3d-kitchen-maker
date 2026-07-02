@@ -75,8 +75,14 @@ export function addModule(itemId, afterModuleId = null, template = 'cabinet') {
   merged.compartments = (merged.compartments ?? []).map((c, i) => ({ id: `${merged.id}-c${i + 1}`, ...c }));
 
   const modules = [...(item.modules ?? [])];
-  const at = afterModuleId ? modules.findIndex((m) => m.id === afterModuleId) : modules.length - 1;
-  if (afterModuleId && at < 0) return fail(`no module "${afterModuleId}"`);
+  // afterModuleId: null appends, 'start' prepends, otherwise inserts after.
+  const at =
+    afterModuleId === 'start'
+      ? -1
+      : afterModuleId
+        ? modules.findIndex((m) => m.id === afterModuleId)
+        : modules.length - 1;
+  if (afterModuleId && afterModuleId !== 'start' && at < 0) return fail(`no module "${afterModuleId}"`);
   modules.splice(at + 1, 0, merged);
   return writeModules(index, item, modules);
 }
@@ -204,6 +210,11 @@ export function setUnitParam(itemId, key, value) {
   if (!item) return fail(`no item "${itemId}"`);
   if (key === 'worktop' || key === 'plinth') {
     store.set(`items.${index}.${key}`, Boolean(value));
+    return ok();
+  }
+  if (key === 'unitType') {
+    if (!['base', 'wall', 'tall', 'island'].includes(value)) return fail(`unknown unitType "${value}"`);
+    store.set(`items.${index}.unitType`, value);
     return ok();
   }
   if (key.startsWith('materials.')) {
