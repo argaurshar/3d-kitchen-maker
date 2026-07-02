@@ -78,7 +78,7 @@ Updated whenever a feature lands (see CLAUDE.md).
 
 - [x] **P1 — Scaffold**: project structure, SPEC.md, CLAUDE.md, empty lit scene
       with orbit controls and ground plane
-- [ ] **P2 — Screenshot harness**: `tools/shot.mjs` renders deterministic views
+- [x] **P2 — Screenshot harness**: `tools/shot.mjs` renders deterministic views
       of the running app into `shots/` via Playwright
 - [ ] **P3 — State store**: JSON scene store with subscribe/notify, schema
       defaults, fixtures; 3D layer rebuilds only affected items

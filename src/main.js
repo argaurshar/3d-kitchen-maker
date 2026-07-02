@@ -3,6 +3,8 @@ import { createRenderer } from './core/renderer.js';
 import { createCamera, createControls } from './core/camera.js';
 import { createLights } from './core/lights.js';
 import { createGround } from './core/room.js';
+import { installDebugApi } from './core/debug.js';
+import { store } from './state/store.js';
 
 const renderer = createRenderer();
 document.body.appendChild(renderer.domElement);
@@ -16,6 +18,12 @@ const controls = createControls(camera, renderer.domElement);
 scene.add(createLights());
 scene.add(createGround());
 
+// 3D layer: subscribes to the store. Rebuild-on-change lands in Prompt 3;
+// for now it only logs what changed.
+store.subscribe((change) => {
+  console.log('[3d] store changed:', JSON.stringify(change));
+});
+
 function onResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -24,7 +32,16 @@ function onResize() {
 window.addEventListener('resize', onResize);
 onResize();
 
+let resolveReady;
+const ready = new Promise((resolve) => (resolveReady = resolve));
+installDebugApi({ camera, controls, ready });
+
+let firstFrame = true;
 renderer.setAnimationLoop(() => {
   controls.update();
   renderer.render(scene, camera);
+  if (firstFrame) {
+    firstFrame = false;
+    resolveReady();
+  }
 });

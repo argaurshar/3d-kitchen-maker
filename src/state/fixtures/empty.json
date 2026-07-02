@@ -1,0 +1,10 @@
+{
+  "room": {
+    "width": 6,
+    "depth": 5,
+    "wallHeight": 2.6,
+    "wallColor": "paint_white",
+    "floorMaterial": "tile_light"
+  },
+  "items": []
+}
