@@ -6,6 +6,7 @@ import {
   makeTerrazzoTexture,
   makeQuartzTexture,
   makeParquetTexture,
+  makeHexTexture,
 } from './stoneTextures.js';
 
 // Swatch registry: (id, label, category, params). The MaterialLibrary turns
@@ -73,6 +74,7 @@ export const SWATCHES = [
   stone('stone_concrete', 'Concrete', () => makeConcreteTexture(), 0.7),
   stone('stone_terrazzo', 'Terrazzo', () => makeTerrazzoTexture(), 0.35),
   stone('tile_light', 'Light Tile', () => makeTileTexture(), 0.85),
+  stone('tile_hex', 'Hex Tile', () => makeHexTexture(), 0.4),
 
   // ---- METAL (3) ----
   {

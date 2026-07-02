@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { applyCameraPreset } from './camera.js';
 import { store } from '../state/store.js';
+import * as actions from '../state/actions.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
 // Not for application code — the app itself must go through the store.
@@ -14,7 +15,10 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
     getRendererInfo: () => ({
       geometries: renderer.info.memory.geometries,
       textures: renderer.info.memory.textures,
+      calls: renderer.info.render.calls,
+      triangles: renderer.info.render.triangles,
     }),
+    actions,
 
     // Jump doors/drawers to an exact open amount (deterministic screenshots).
     setOpen: (amount) => openDoors?.set(amount),

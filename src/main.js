@@ -9,6 +9,7 @@ import { createPaintTool } from './interact/paint.js';
 import { createPreview } from './interact/preview.js';
 import { createWalk } from './interact/walk.js';
 import { createViewChrome } from './ui/viewChrome.js';
+import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
 import { updateTweens } from './core/tween.js';
 import { installDebugApi } from './core/debug.js';
@@ -130,6 +131,7 @@ const viewChrome = createViewChrome({
   },
 });
 preview.onExit(() => viewChrome.setPreviewActive(false));
+const stats = createStats(renderer);
 
 const persist = initPersistence();
 
@@ -176,6 +178,7 @@ renderer.setAnimationLoop((time) => {
   walk.update(Math.min(rawDt, 0.3));
   picker.update();
   renderer.render(scene, camera);
+  stats.tick();
   if (firstFrame) {
     firstFrame = false;
     resolveReady();

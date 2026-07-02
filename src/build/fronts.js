@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
-import { box, cylinder } from './util.js';
+import { box, cylinder, boxGeom, cylGeom, mergeParts } from './util.js';
 
 const T = DIMS.frontThickness;
 const OPEN_DOOR_RAD = THREE.MathUtils.degToRad(105);
@@ -32,32 +32,30 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
   const railH = cutout ? Math.max(fw - 0.018, 0.014) : fw;
   const railTopY = h - 0.018 * cutout - railH / 2;
 
-  const frame = [
-    { size: [w, railH, T], pos: [w / 2, railTopY, T / 2] },
-    { size: [w, fw, T], pos: [w / 2, fw / 2, T / 2] },
-    { size: [fw, h - fw - railH - 0.018 * cutout, T], pos: [fw / 2, fw + (h - fw - railH - 0.018 * cutout) / 2, T / 2] },
-    { size: [fw, h - fw - railH - 0.018 * cutout, T], pos: [w - fw / 2, fw + (h - fw - railH - 0.018 * cutout) / 2, T / 2] },
+  // Frame (and, when opaque, the recessed center panel) merge into one
+  // static mesh; the pieces never move relative to each other.
+  const stileH = h - fw - railH - 0.018 * cutout;
+  const frameGeoms = [
+    boxGeom(w, railH, T, w / 2, railTopY, T / 2),
+    boxGeom(w, fw, T, w / 2, fw / 2, T / 2),
+    boxGeom(fw, stileH, T, fw / 2, fw + stileH / 2, T / 2),
+    boxGeom(fw, stileH, T, w - fw / 2, fw + stileH / 2, T / 2),
   ];
-  for (const { size, pos } of frame) {
-    const mesh = box(...size, doorMat, tag(role));
-    mesh.position.set(...pos);
-    g.add(mesh);
-  }
 
   // Center panel (or glass pane) tucks behind the frame: no through-slit.
   const overlap = 0.008;
   const innerW = w - 2 * fw + 2 * overlap;
   const innerH = h - fw - railH - 0.018 * cutout + 2 * overlap;
   if (glassMat) {
+    g.add(mergeParts(frameGeoms, doorMat, tag(role)));
     const pane = box(innerW, innerH, 0.004, glassMat, tag(role));
     pane.castShadow = false;
     pane.position.set(w / 2, fw - overlap + innerH / 2, 0.008);
     g.add(pane);
   } else {
     const panelT = T - 0.014;
-    const panel = box(innerW, innerH, panelT, doorMat, tag(role));
-    panel.position.set(w / 2, fw - overlap + innerH / 2, 0.001 + panelT / 2);
-    g.add(panel);
+    frameGeoms.push(boxGeom(innerW, innerH, panelT, w / 2, fw - overlap + innerH / 2, 0.001 + panelT / 2));
+    g.add(mergeParts(frameGeoms, doorMat, tag(role)));
   }
 
   if (cutout) {
@@ -78,10 +76,10 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
 
 // Bar: horizontal near the top edge (drawers: centered); vertical at
 // mid-height for tall doors, always on the side opposite the hinge.
+// Bar + posts merge into one mesh.
 function addBarHandle(g, { w, h, kind, hinge, material, tag }) {
   const verticalBar = kind === 'door' && h > 0.9;
   const length = verticalBar ? Math.min(0.35, h * 0.35) : Math.min(0.15, w * 0.45);
-  const bar = cylinder(0.005, length, material, tag('handle'));
   let cx;
   let cy;
   if (kind === 'drawer') {
@@ -95,16 +93,14 @@ function addBarHandle(g, { w, h, kind, hinge, material, tag }) {
     cx = hinge === 'R' ? margin : w - margin;
     cy = h - 0.055;
   }
-  if (!verticalBar) bar.rotation.z = Math.PI / 2;
-  bar.position.set(cx, cy, T + 0.018);
-  g.add(bar);
+  const geoms = [cylGeom(0.005, length, cx, cy, T + 0.018, verticalBar ? {} : { rz: Math.PI / 2 })];
   for (const side of [-1, 1]) {
-    const post = cylinder(0.003, 0.018, material, tag('handle'), 12);
-    post.rotation.x = Math.PI / 2;
     const off = side * (length / 2 - 0.012);
-    post.position.set(cx + (verticalBar ? 0 : off), cy + (verticalBar ? off : 0), T + 0.009);
-    g.add(post);
+    geoms.push(
+      cylGeom(0.003, 0.018, cx + (verticalBar ? 0 : off), cy + (verticalBar ? off : 0), T + 0.009, { rx: Math.PI / 2, seg: 12 })
+    );
   }
+  g.add(mergeParts(geoms, material, tag('handle')));
 }
 
 // Door front(s) for a compartment rect. hinge 'double' yields two leaves.
@@ -150,16 +146,17 @@ export function buildDrawerFront({ rect, zBack, doorMat, carcassMat, handleStyle
   const bh = Math.max(h - 0.05, 0.05);
   const bd = 0.42;
   const s = 0.012;
-  const parts = [
-    { size: [bw, s, bd], pos: [w / 2, 0.02 + s / 2, -bd / 2 - 0.005] },
-    { size: [s, bh, bd], pos: [w / 2 - bw / 2 + s / 2, 0.02 + bh / 2, -bd / 2 - 0.005] },
-    { size: [s, bh, bd], pos: [w / 2 + bw / 2 - s / 2, 0.02 + bh / 2, -bd / 2 - 0.005] },
-    { size: [bw, bh, s], pos: [w / 2, 0.02 + bh / 2, -bd - 0.005 + s / 2] },
-  ];
-  for (const { size, pos } of parts) {
-    const mesh = box(...size, carcassMat, tag('carcass'));
-    mesh.position.set(...pos);
-    drawer.add(mesh);
-  }
+  drawer.add(
+    mergeParts(
+      [
+        boxGeom(bw, s, bd, w / 2, 0.02 + s / 2, -bd / 2 - 0.005),
+        boxGeom(s, bh, bd, w / 2 - bw / 2 + s / 2, 0.02 + bh / 2, -bd / 2 - 0.005),
+        boxGeom(s, bh, bd, w / 2 + bw / 2 - s / 2, 0.02 + bh / 2, -bd / 2 - 0.005),
+        boxGeom(bw, bh, s, w / 2, 0.02 + bh / 2, -bd - 0.005 + s / 2),
+      ],
+      carcassMat,
+      tag('carcass')
+    )
+  );
   return drawer;
 }

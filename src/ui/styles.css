@@ -338,6 +338,19 @@ input[type='range'] {
 }
 .toast.fade { opacity: 0; }
 
+.stats {
+  position: fixed;
+  top: 12px;
+  left: 88px;
+  background: #26282cf0;
+  color: #a9c39a;
+  font: 12px ui-monospace, monospace;
+  padding: 7px 12px;
+  border-radius: 999px;
+  z-index: 12;
+}
+.stats.hidden { display: none; }
+
 /* ---------- Finish chips + panel notes ---------- */
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 5px; padding: 4px 0; }

@@ -208,7 +208,7 @@ export function setCompartmentParam(itemId, moduleId, compartmentId, key, value)
 export function setUnitParam(itemId, key, value) {
   const { index, item } = findItem(itemId);
   if (!item) return fail(`no item "${itemId}"`);
-  if (key === 'worktop' || key === 'plinth' || key === 'openFronts') {
+  if (key === 'worktop' || key === 'plinth' || key === 'openFronts' || key === 'backsplash') {
     store.set(`items.${index}.${key}`, Boolean(value));
     return ok();
   }

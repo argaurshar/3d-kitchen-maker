@@ -1,0 +1,417 @@
+{
+  "room": {
+    "width": 6,
+    "depth": 5,
+    "wallHeight": 2.6,
+    "wallColor": "paint_white",
+    "floorMaterial": "tile_light"
+  },
+  "items": [
+    {
+      "id": "base-run",
+      "kind": "run",
+      "unitType": "base",
+      "position": [
+        -2.9,
+        -2.5
+      ],
+      "rotationY": 0,
+      "worktop": true,
+      "plinth": true,
+      "backsplash": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "b1",
+          "type": "drawerBase",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": []
+        },
+        {
+          "id": "b2",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "b2c1",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": false
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "id": "b3",
+          "type": "dishwasher",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": []
+        },
+        {
+          "id": "b4",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "b4c1",
+              "type": "oven"
+            },
+            {
+              "id": "b4c2",
+              "type": "drawer",
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "id": "b5",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "b5c1",
+              "type": "door",
+              "style": {
+                "hinge": "R",
+                "glass": false
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "features": [
+        {
+          "id": "f-sink",
+          "type": "sink",
+          "offsetX": 0.9,
+          "params": {}
+        },
+        {
+          "id": "f-tap",
+          "type": "tap",
+          "offsetX": 0.9,
+          "params": {}
+        },
+        {
+          "id": "f-hob",
+          "type": "hob",
+          "offsetX": 2.1,
+          "params": {
+            "burners": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "west-run",
+      "kind": "run",
+      "unitType": "base",
+      "position": [
+        -3,
+        0.22
+      ],
+      "rotationY": 1.5707963267948966,
+      "worktop": true,
+      "plinth": true,
+      "backsplash": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "w1",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "w1c1",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": false
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "id": "w2",
+          "type": "drawerBase",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": []
+        },
+        {
+          "id": "w3",
+          "type": "blindCorner",
+          "width": 0.9,
+          "handle": "bar",
+          "blindSide": "R",
+          "compartments": [
+            {
+              "id": "w3c1",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": false
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        }
+      ],
+      "features": []
+    },
+    {
+      "id": "wall-run",
+      "kind": "run",
+      "unitType": "wall",
+      "position": [
+        -3,
+        0.4
+      ],
+      "rotationY": 1.5707963267948966,
+      "worktop": false,
+      "plinth": false,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "u1",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "u1c1",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": true
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "id": "u2",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "u2c1",
+              "type": "door",
+              "style": {
+                "hinge": "R",
+                "glass": true
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "id": "u3",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "u3c1",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": true
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "larder-run",
+      "kind": "run",
+      "unitType": "tall",
+      "position": [
+        0.9,
+        -2.5
+      ],
+      "rotationY": 0,
+      "worktop": false,
+      "plinth": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "t1",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "t1c1",
+              "type": "door",
+              "style": {
+                "hinge": "R",
+                "glass": true
+              },
+              "shelvesInside": 2,
+              "weight": 2
+            },
+            {
+              "id": "t1c2",
+              "type": "microwave"
+            },
+            {
+              "id": "t1c3",
+              "type": "oven"
+            },
+            {
+              "id": "t1c4",
+              "type": "drawer",
+              "weight": 1
+            },
+            {
+              "id": "t1c5",
+              "type": "door",
+              "style": {
+                "hinge": "L",
+                "glass": false
+              },
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "island-1",
+      "kind": "run",
+      "unitType": "island",
+      "position": [
+        -0.4,
+        -0.5
+      ],
+      "rotationY": 3.141592653589793,
+      "worktop": true,
+      "plinth": true,
+      "materials": {
+        "door": "paint_sage",
+        "carcass": "paint_white",
+        "worktop": "wood_butcher",
+        "handle": "metal_black"
+      },
+      "modules": [
+        {
+          "id": "i1",
+          "type": "drawerBase",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": []
+        },
+        {
+          "id": "i2",
+          "type": "cabinet",
+          "width": 0.6,
+          "handle": "bar",
+          "compartments": [
+            {
+              "id": "i2c1",
+              "type": "door",
+              "style": {
+                "hinge": "R",
+                "glass": false
+              },
+              "shelvesInside": 1,
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fridge-1",
+      "kind": "appliance",
+      "applianceType": "fridge",
+      "position": [
+        1.7,
+        -2.5
+      ],
+      "rotationY": 0,
+      "params": {
+        "type": "sideBySide",
+        "finish": "stainless"
+      }
+    },
+    {
+      "id": "hood-1",
+      "kind": "appliance",
+      "applianceType": "hood",
+      "position": [
+        -1.1,
+        -2.5
+      ],
+      "rotationY": 0,
+      "params": {}
+    },
+    {
+      "id": "stool-1",
+      "kind": "furniture",
+      "furnitureType": "stool",
+      "position": [
+        -1.3,
+        -0.05
+      ],
+      "rotationY": 0,
+      "params": {
+        "preset": "counter"
+      }
+    },
+    {
+      "id": "stool-2",
+      "kind": "furniture",
+      "furnitureType": "stool",
+      "position": [
+        -0.7,
+        -0.05
+      ],
+      "rotationY": 0,
+      "params": {
+        "preset": "counter"
+      }
+    }
+  ]
+}

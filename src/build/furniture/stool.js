@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { cylinder } from '../util.js';
+import { mergeParts } from '../util.js';
 
 export const STOOL_DEFAULTS = {
   preset: 'counter',
@@ -50,19 +50,23 @@ export function buildStool(item, matLib) {
   seat.position.y = p.seatHeight - p.seatThickness / 2;
   group.add(seat);
 
-  // Legs: slim black cylinders angled outward by legSpread.
+  // All black metalwork (legs, footrest, backrest) merges into one mesh.
+  const metalGeoms = [];
   const topOffset = p.seatRadius * 0.62;
   const bottomOffset = topOffset + p.legSpread;
   const topY = p.seatHeight - p.seatThickness;
   const up = new THREE.Vector3(0, 1, 0);
+  const quat = new THREE.Quaternion();
+  const mat = new THREE.Matrix4();
   for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
     const top = new THREE.Vector3(sx * topOffset, topY, sz * topOffset);
     const bottom = new THREE.Vector3(sx * bottomOffset, 0, sz * bottomOffset);
     const dir = top.clone().sub(bottom);
-    const leg = cylinder(0.011, dir.length(), black, legTag(), 10);
-    leg.position.copy(bottom).addScaledVector(dir, 0.5);
-    leg.quaternion.setFromUnitVectors(up, dir.clone().normalize());
-    group.add(leg);
+    const leg = new THREE.CylinderGeometry(0.011, 0.011, dir.length(), 10);
+    quat.setFromUnitVectors(up, dir.clone().normalize());
+    mat.compose(bottom.clone().addScaledVector(dir, 0.5), quat, new THREE.Vector3(1, 1, 1));
+    leg.applyMatrix4(mat);
+    metalGeoms.push(leg);
   }
 
   // Footrest at ringHeight: torus for round stools, 4 bars for square.
@@ -70,41 +74,40 @@ export function buildStool(item, matLib) {
     const t = p.ringHeight / topY;
     const offsetAtRing = bottomOffset + (topOffset - bottomOffset) * t;
     if (p.seatShape === 'square') {
-      for (const [rx, rz, len, rotY] of [
-        [0, -offsetAtRing, offsetAtRing * 2, Math.PI / 2],
-        [0, offsetAtRing, offsetAtRing * 2, Math.PI / 2],
-        [-offsetAtRing, 0, offsetAtRing * 2, 0],
-        [offsetAtRing, 0, offsetAtRing * 2, 0],
+      for (const [rx, rz, rotY] of [
+        [0, -offsetAtRing, Math.PI / 2],
+        [0, offsetAtRing, Math.PI / 2],
+        [-offsetAtRing, 0, 0],
+        [offsetAtRing, 0, 0],
       ]) {
-        const bar = cylinder(0.006, len, black, legTag(), 8);
-        bar.rotation.z = Math.PI / 2;
-        bar.rotation.y = rotY;
-        bar.position.set(rx, p.ringHeight, rz);
-        group.add(bar);
+        const bar = new THREE.CylinderGeometry(0.006, 0.006, offsetAtRing * 2, 8);
+        bar.rotateZ(Math.PI / 2);
+        bar.rotateY(rotY);
+        bar.translate(rx, p.ringHeight, rz);
+        metalGeoms.push(bar);
       }
     } else {
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(offsetAtRing * Math.SQRT2, 0.006, 8, 40), black);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = p.ringHeight;
-      ring.userData = legTag();
-      ring.castShadow = true;
-      group.add(ring);
+      const ring = new THREE.TorusGeometry(offsetAtRing * Math.SQRT2, 0.006, 8, 40);
+      ring.rotateX(-Math.PI / 2);
+      ring.translate(0, p.ringHeight, 0);
+      metalGeoms.push(ring);
     }
   }
 
   // Backrest: vertical hoop rising from the back edge of the seat.
   if (p.backrest) {
-    const hoop = new THREE.Mesh(new THREE.TorusGeometry(p.seatRadius * 0.8, 0.009, 8, 32, Math.PI), black);
-    hoop.position.set(0, p.seatHeight + 0.02, -p.seatRadius * 0.82);
-    hoop.userData = legTag();
-    hoop.castShadow = true;
-    group.add(hoop);
+    const hoop = new THREE.TorusGeometry(p.seatRadius * 0.8, 0.009, 8, 32, Math.PI);
+    hoop.translate(0, 0, 0);
+    const hoopMat = new THREE.Matrix4().makeTranslation(0, p.seatHeight + 0.02, -p.seatRadius * 0.82);
+    hoop.applyMatrix4(hoopMat);
+    metalGeoms.push(hoop);
     for (const sx of [-1, 1]) {
-      const post = cylinder(0.009, 0.1, black, legTag(), 8);
-      post.position.set(sx * p.seatRadius * 0.8, p.seatHeight - 0.03, -p.seatRadius * 0.82);
-      group.add(post);
+      const post = new THREE.CylinderGeometry(0.009, 0.009, 0.1, 8);
+      post.translate(sx * p.seatRadius * 0.8, p.seatHeight - 0.03, -p.seatRadius * 0.82);
+      metalGeoms.push(post);
     }
   }
+  group.add(mergeParts(metalGeoms, black, legTag()));
 
   group.position.set(item.position?.[0] ?? 0, 0, item.position?.[1] ?? 0);
   group.rotation.y = item.rotationY ?? 0;

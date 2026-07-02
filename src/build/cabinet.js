@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
-import { box, cylinder } from './util.js';
+import { box, cylinder, boxGeom, mergeParts } from './util.js';
 import { buildCompartmentStack } from './compartments.js';
 import { buildDoorFronts } from './fronts.js';
 
@@ -157,23 +157,25 @@ function buildOverflowWarning(width, ctx, tag) {
   return warning;
 }
 
-// Hollow 18mm carcass: two sides, bottom, back, two top stretchers.
+// Hollow 18mm carcass: two sides, bottom, back, two top stretchers —
+// merged into ONE static mesh per module (draw-call budget).
 function addCarcass(group, width, ctx, material, tag) {
   const H = ctx.carcassHeight;
   const D = ctx.carcassDepth;
   const y = ctx.yBase;
   const innerW = width - 2 * P;
-  const parts = [
-    { size: [P, H, D], pos: [P / 2, y + H / 2, D / 2] },
-    { size: [P, H, D], pos: [width - P / 2, y + H / 2, D / 2] },
-    { size: [innerW, P, D], pos: [width / 2, y + P / 2, D / 2] },
-    { size: [innerW, H - 2 * P, P], pos: [width / 2, y + H / 2, P / 2] },
-    { size: [innerW, P, STRETCHER_DEPTH], pos: [width / 2, y + H - P / 2, D - STRETCHER_DEPTH / 2] },
-    { size: [innerW, P, STRETCHER_DEPTH], pos: [width / 2, y + H - P / 2, P + STRETCHER_DEPTH / 2] },
-  ];
-  for (const { size, pos } of parts) {
-    const mesh = box(...size, material, tag('carcass'));
-    mesh.position.set(...pos);
-    group.add(mesh);
-  }
+  group.add(
+    mergeParts(
+      [
+        boxGeom(P, H, D, P / 2, y + H / 2, D / 2),
+        boxGeom(P, H, D, width - P / 2, y + H / 2, D / 2),
+        boxGeom(innerW, P, D, width / 2, y + P / 2, D / 2),
+        boxGeom(innerW, H - 2 * P, P, width / 2, y + H / 2, P / 2),
+        boxGeom(innerW, P, STRETCHER_DEPTH, width / 2, y + H - P / 2, D - STRETCHER_DEPTH / 2),
+        boxGeom(innerW, P, STRETCHER_DEPTH, width / 2, y + H - P / 2, P + STRETCHER_DEPTH / 2),
+      ],
+      material,
+      tag('carcass')
+    )
+  );
 }

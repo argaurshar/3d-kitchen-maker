@@ -137,6 +137,36 @@ export function makeQuartzTexture({ size = 256, seed = 64 } = {}) {
   return canvasTexture(canvas, 0.8);
 }
 
+// Hexagon tile: white hexes with thin grout, for backsplashes.
+export function makeHexTexture({ size = 512, seed = 66 } = {}) {
+  const canvas = makeCanvas(size);
+  const ctx = canvas.getContext('2d');
+  const random = seededRandom(seed);
+  ctx.fillStyle = '#c9c4bb';
+  ctx.fillRect(0, 0, size, size);
+  const r = size / 8; // hex radius
+  const w = Math.sqrt(3) * r;
+  const h = 1.5 * r;
+  for (let row = -1; row < size / h + 1; row += 1) {
+    for (let col = -1; col < size / w + 1; col += 1) {
+      const cx = col * w + (row % 2 ? w / 2 : 0);
+      const cy = row * h;
+      const light = 94 + (random() - 0.5) * 4;
+      ctx.fillStyle = `hsl(40, 12%, ${light}%)`;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k += 1) {
+        const a = (Math.PI / 3) * k + Math.PI / 6;
+        const px = cx + Math.cos(a) * (r - 1.6);
+        const py = cy + Math.sin(a) * (r - 1.6);
+        k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  return canvasTexture(canvas, 0.55);
+}
+
 // Herringbone parquet: two-tone diagonal blocks.
 export function makeParquetTexture({ size = 512, seed = 65 } = {}) {
   const canvas = makeCanvas(size);

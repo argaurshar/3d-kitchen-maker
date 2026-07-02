@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
 import { buildModule, doorFaceZ } from './cabinet.js';
-import { box, worldScaleBoxUVs } from './util.js';
+import { box, boxGeom, mergeParts, worldScaleBoxUVs } from './util.js';
 import { buildHob } from './appliances/hob.js';
 import { buildSink } from './appliances/sink.js';
 import { buildTap } from './appliances/tap.js';
@@ -51,6 +51,18 @@ export function buildRun(item, matLib) {
   if (ctx.unitType === 'island' && cursor > 0) {
     addIslandPanels(group, item, cursor, ctx, matLib);
   }
+  // Optional backsplash strip between worktop and wall-unit height.
+  if (item.backsplash && ctx.unitType === 'base' && cursor > 0) {
+    const y0 = ctx.yBase + ctx.carcassHeight + DIMS.worktopThickness;
+    const h = DIMS.wallUnitMount - y0;
+    const splash = box(cursor, h, 0.008, matLib.get('tile_hex'), {
+      itemId: item.id,
+      surfaceRole: 'wall',
+    });
+    worldScaleBoxUVs(splash.geometry, cursor, h, 0.008);
+    splash.position.set(cursor / 2, y0 + h / 2, 0.005);
+    group.add(splash);
+  }
 
   group.position.set(item.position?.[0] ?? 0, 0, item.position?.[1] ?? 0);
   group.rotation.y = item.rotationY ?? 0;
@@ -93,19 +105,20 @@ function buildWorktop(item, runWidth, ctx, matLib) {
   return slab;
 }
 
-// Islands never show raw carcass: finished panels close the back and ends.
+// Islands never show raw carcass: finished panels close the back and ends
+// (merged into one mesh).
 function addIslandPanels(group, item, runWidth, ctx, matLib) {
   const P = DIMS.panelThickness;
-  const material = matLib.get(item.materials.door);
   const H = ctx.carcassHeight + (ctx.plinth ? DIMS.plinthHeight : 0);
-  const panels = [
-    { size: [runWidth + 2 * P, H, P], pos: [runWidth / 2, H / 2, -P / 2] },
-    { size: [P, H, ctx.carcassDepth + P], pos: [-P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P] },
-    { size: [P, H, ctx.carcassDepth + P], pos: [runWidth + P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P] },
-  ];
-  for (const { size, pos } of panels) {
-    const mesh = box(...size, material, { itemId: item.id, surfaceRole: 'carcass' });
-    mesh.position.set(...pos);
-    group.add(mesh);
-  }
+  group.add(
+    mergeParts(
+      [
+        boxGeom(runWidth + 2 * P, H, P, runWidth / 2, H / 2, -P / 2),
+        boxGeom(P, H, ctx.carcassDepth + P, -P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P),
+        boxGeom(P, H, ctx.carcassDepth + P, runWidth + P / 2, H / 2, (ctx.carcassDepth + P) / 2 - P),
+      ],
+      matLib.get(item.materials.door),
+      { itemId: item.id, surfaceRole: 'carcass' }
+    )
+  );
 }

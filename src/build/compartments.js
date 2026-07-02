@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
-import { box, cylinder } from './util.js';
+import { box, cylinder, boxGeom, cylGeom, mergeParts } from './util.js';
 import { buildDoorFronts, buildDrawerFront } from './fronts.js';
 
 const GAP = DIMS.frontGap;
@@ -167,23 +167,19 @@ function buildOvenFront(group, rect, ctx, matLib, tag) {
   win.position.set(cx, rect.y0 + h * 0.34, ctx.zBack + 0.022);
   group.add(win);
 
+  const steelGeoms = [];
   for (let k = 0; k < 4; k += 1) {
-    const knob = cylinder(0.009, 0.014, steel, tag('applianceBody'), 14);
-    knob.rotation.x = Math.PI / 2;
-    knob.position.set(rect.x0 + w * (0.3 + k * 0.135), rect.y1 - 0.05, ctx.zBack + 0.026);
-    group.add(knob);
+    steelGeoms.push(
+      cylGeom(0.009, 0.014, rect.x0 + w * (0.3 + k * 0.135), rect.y1 - 0.05, ctx.zBack + 0.026, { rx: Math.PI / 2, seg: 14 })
+    );
   }
-
-  const bar = cylinder(0.006, w - 0.1, steel, tag('handle'));
-  bar.rotation.z = Math.PI / 2;
-  bar.position.set(cx, rect.y1 - 0.105, ctx.zBack + 0.05);
-  group.add(bar);
+  steelGeoms.push(cylGeom(0.006, w - 0.1, cx, rect.y1 - 0.105, ctx.zBack + 0.05, { rz: Math.PI / 2 }));
   for (const side of [-1, 1]) {
-    const post = cylinder(0.004, 0.035, steel, tag('handle'), 12);
-    post.rotation.x = Math.PI / 2;
-    post.position.set(cx + side * (w / 2 - 0.08), rect.y1 - 0.105, ctx.zBack + 0.032);
-    group.add(post);
+    steelGeoms.push(
+      cylGeom(0.004, 0.035, cx + side * (w / 2 - 0.08), rect.y1 - 0.105, ctx.zBack + 0.032, { rx: Math.PI / 2, seg: 12 })
+    );
   }
+  group.add(mergeParts(steelGeoms, steel, tag('applianceBody')));
 }
 
 // Dark front, window on the left, button grid on the right control panel.
@@ -204,15 +200,13 @@ function buildMicrowaveFront(group, rect, ctx, matLib, tag) {
   group.add(win);
 
   const gridX = rect.x1 - panelW / 2 - 0.015;
+  const buttonGeoms = [];
   for (let row = 0; row < 4; row += 1) {
     for (let col = 0; col < 3; col += 1) {
-      const button = box(0.016, 0.012, 0.003, steel, tag('applianceBody'));
-      button.position.set(
-        gridX + (col - 1) * 0.024,
-        rect.y0 + h * 0.72 - row * 0.032,
-        ctx.zBack + 0.022
+      buttonGeoms.push(
+        boxGeom(0.016, 0.012, 0.003, gridX + (col - 1) * 0.024, rect.y0 + h * 0.72 - row * 0.032, ctx.zBack + 0.022)
       );
-      group.add(button);
     }
   }
+  group.add(mergeParts(buttonGeoms, steel, tag('applianceBody')));
 }

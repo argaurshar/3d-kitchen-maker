@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { box } from '../util.js';
+import { box, boxGeom, mergeParts } from '../util.js';
 
 export const SINK_SIZE = { w: 0.56, d: 0.5 };
 
@@ -16,17 +16,13 @@ export function buildSink(feature, matLib, tag) {
   plate.position.y = 0.004;
   group.add(plate);
 
-  // Basin: dark rounded box sunk so its top face reads as a recess.
-  const basin = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.03, 0.38, 3, 0.02), dark);
-  basin.userData = tag('applianceBody');
-  basin.position.set(-0.07, -0.006, 0);
-  group.add(basin);
-
-  // Drainer grooves beside the basin.
+  // Basin (sunken rounded box) + drainer grooves merge into one dark mesh.
+  const basinGeom = new RoundedBoxGeometry(0.34, 0.03, 0.38, 3, 0.02);
+  basinGeom.translate(-0.07, -0.006, 0);
+  const darkGeoms = [basinGeom];
   for (let g = 0; g < 5; g += 1) {
-    const groove = box(0.11, 0.002, 0.012, dark, tag('applianceBody'));
-    groove.position.set(0.185, 0.0085, -0.14 + g * 0.07);
-    group.add(groove);
+    darkGeoms.push(boxGeom(0.11, 0.002, 0.012, 0.185, 0.0085, -0.14 + g * 0.07));
   }
+  group.add(mergeParts(darkGeoms, dark, tag('applianceBody')));
   return group;
 }
