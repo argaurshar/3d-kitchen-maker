@@ -82,7 +82,7 @@ Updated whenever a feature lands (see CLAUDE.md).
       of the running app into `shots/` via Playwright
 - [ ] **P3 — State store**: JSON scene store with subscribe/notify, schema
       defaults, fixtures; 3D layer rebuilds only affected items
-- [ ] **P4 — Room shell**: floor and walls generated from `room` params, wall
+- [x] **P4 — Room shell**: floor and walls generated from `room` params, wall
       and floor materials
 - [ ] **P5 — Cabinet module generator**: carcass, doors, drawers, handles;
       compartments with proportional weights and fixed-height slots
