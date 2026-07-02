@@ -100,6 +100,6 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [x] **P11 — Furniture**: parametric stools
 - [x] **P12 — Placement & snapping**: drag placement, rotation gizmo, snapping
       to walls and neighboring runs
-- [ ] **P13 — Paint mode**: per-surface material painting via radial swatch
+- [x] **P13 — Paint mode**: per-surface material painting via radial swatch
       wheel
 - [ ] **P14 — Polish**: materials library breadth, persistence, final QA pass

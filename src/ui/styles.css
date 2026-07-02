@@ -363,3 +363,35 @@ input[type='range'] {
   flex: none;
 }
 .panel-note { padding: 12px 4px; color: #9aa0a8; font-size: 12.5px; }
+
+/* ---------- Paint wheel ---------- */
+
+.wheel {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  z-index: 14;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+}
+.wheel.hidden { display: none; }
+.wheel svg { width: 100%; height: 100%; }
+.wheel-seg {
+  cursor: pointer;
+  stroke: #1b1d20;
+  stroke-width: 1;
+  transition: stroke-width 0.08s ease;
+}
+.wheel-seg.hover { stroke: #ffffff; stroke-width: 2.5; }
+.wheel-disc { fill: #26282cf2; pointer-events: none; }
+.wheel-label,
+.wheel-sublabel { pointer-events: none; }
+.wheel-label {
+  fill: #ffffff;
+  font: 600 15px system-ui, sans-serif;
+  text-anchor: middle;
+}
+.wheel-sublabel {
+  fill: #9aa0a8;
+  font: 700 10px system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+}

@@ -81,7 +81,6 @@ export function createToolbar(handlers) {
         closeFurnish();
         setActive(item.id);
         handlers.onTool?.(item.id);
-        if (item.id === 'paint') toast('Paint tool: Prompt 12');
       } else if (item.id === 'furnish') {
         state.furnishOpen = !state.furnishOpen;
         row.classList.toggle('hidden', !state.furnishOpen);

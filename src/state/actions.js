@@ -219,12 +219,20 @@ export function setUnitParam(itemId, key, value) {
   }
   if (key.startsWith('materials.')) {
     const slot = key.split('.')[1];
-    if (!['door', 'carcass', 'worktop', 'handle'].includes(slot)) return fail(`unknown material slot "${slot}"`);
+    if (!['door', 'carcass', 'worktop', 'handle', 'plinth'].includes(slot)) return fail(`unknown material slot "${slot}"`);
     if (!MATERIAL_IDS.has(value)) return fail(`unknown material "${value}"`);
     store.set(`items.${index}.materials.${slot}`, value);
     return ok();
   }
   return fail(`unknown unit param "${key}"`);
+}
+
+// Room-level paint targets (walls, floor).
+export function setRoomParam(key, value) {
+  if (!['wallColor', 'floorMaterial'].includes(key)) return fail(`unknown room param "${key}"`);
+  if (!MATERIAL_IDS.has(value)) return fail(`unknown material "${value}"`);
+  store.set(`room.${key}`, value);
+  return ok();
 }
 
 export function addItem(item) {
@@ -301,6 +309,7 @@ const STOOL_PARAMS = {
   footrestRing: (v) => typeof v === 'boolean',
   ringHeight: (v) => typeof v === 'number' && v >= 0.1 && v <= 0.3,
   backrest: (v) => typeof v === 'boolean',
+  seatMaterial: (v) => MATERIAL_IDS.has(v),
 };
 
 // Choosing a preset resets the bundle (overrides are dropped),

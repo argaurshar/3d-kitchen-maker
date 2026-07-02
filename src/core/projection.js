@@ -40,7 +40,7 @@ export function createProjection(scene) {
       scene.remove(roomGroup);
       disposeGroup(roomGroup);
     }
-    roomGroup = buildRoom(store.get().room);
+    roomGroup = buildRoom(store.get().room, materialLibrary);
     scene.add(roomGroup);
   }
 
@@ -129,5 +129,6 @@ export function createProjection(scene) {
       for (const group of itemGroups.values()) applyClay(group, clay);
     },
     isClay: () => clay,
+    getRoomGroup: () => roomGroup,
   };
 }

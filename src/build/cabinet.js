@@ -29,7 +29,7 @@ export function buildModule(module, ctx, matLib) {
 
   addCarcass(group, width, ctx, matLib.get(ctx.materials.carcass), tag);
   if (ctx.plinth) {
-    const plinth = box(width, DIMS.plinthHeight, P, matLib.get(ctx.materials.carcass), tag('plinth'));
+    const plinth = box(width, DIMS.plinthHeight, P, matLib.get(ctx.materials.plinth ?? ctx.materials.carcass), tag('plinth'));
     plinth.position.set(width / 2, DIMS.plinthHeight / 2, doorFaceZ(ctx.carcassDepth) - 0.05 - P / 2);
     group.add(plinth);
   }

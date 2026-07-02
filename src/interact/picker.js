@@ -9,7 +9,7 @@ import { addItem, addFeature, removeItem as removeItemAction } from '../state/ac
 // Interaction coordinator: hover highlight, click select, escape deselect,
 // and pointer routing to the gizmo (rotate) and placement (move) drags.
 // OrbitControls are disabled for the duration of any drag.
-export function createPicker({ scene, camera, renderer, controls, projection, panel, runButtons, onPlacementEnd, onPaintAttempt }) {
+export function createPicker({ scene, camera, renderer, controls, projection, panel, runButtons, paint, onPlacementEnd }) {
   const raycaster = new THREE.Raycaster();
   raycaster.params.Line = { threshold: 0.001 };
   const pointer = new THREE.Vector2();
@@ -50,8 +50,8 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       if (ud.gizmo) continue;
       const id = ud.itemId;
       if (!id) continue;
-      if (id === 'room' || id === 'studio') return { kind: 'floor', point: hit.point };
-      return { kind: 'item', itemId: id, point: hit.point };
+      if (id === 'room' || id === 'studio') return { kind: 'floor', point: hit.point, object: hit.object };
+      return { kind: 'item', itemId: id, point: hit.point, object: hit.object };
     }
     return { kind: 'none' };
   }
@@ -137,6 +137,10 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       return;
     }
     const hit = pick(event);
+    if (tool === 'paint') {
+      paint?.hover(hit);
+      return;
+    }
     setHover(hit.kind === 'item' ? hit.itemId : null);
     dom.style.cursor =
       hit.kind === 'gizmoDot' ? 'grab' : hit.kind === 'item' ? 'pointer' : '';
@@ -177,7 +181,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       return;
     }
     if (tool === 'paint') {
-      if (hit.kind === 'item') onPaintAttempt?.();
+      paint?.click(hit);
       return;
     }
     if (hit.kind === 'item') select(hit.itemId);
@@ -200,6 +204,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      if (paint?.escape()) return;
       if (ghost.active()) cancelPlacement();
       else select(null);
     } else if ((event.key === 'Delete' || event.key === 'Backspace') && selectedId && !ghost.active()) {
@@ -221,6 +226,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       }
     }
     runButtons.update(Boolean(dragging));
+    paint?.update();
   }
 
   return {
@@ -232,6 +238,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
     gizmoDotWorld: () => gizmo.dot.getWorldPosition(new THREE.Vector3()).toArray(),
 
     setTool(t) {
+      if (tool === 'paint' && t !== 'paint') paint?.deactivate();
       tool = t;
       cancelPlacement();
       if (t !== 'select') select(null);

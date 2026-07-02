@@ -34,7 +34,7 @@ export function buildStool(item, matLib) {
   group.name = `stool:${item.id}`;
   const seatTag = { itemId: item.id, surfaceRole: 'seat' };
   const legTag = () => ({ itemId: item.id, surfaceRole: 'leg' });
-  const wood = matLib.get('wood_butcher');
+  const wood = matLib.get(p.seatMaterial ?? 'wood_butcher');
   const black = matLib.get('metal_black');
 
   // Seat

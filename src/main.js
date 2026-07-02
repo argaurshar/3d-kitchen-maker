@@ -5,6 +5,7 @@ import { createLights, applyLightPreset } from './core/lights.js';
 import { createProjection } from './core/projection.js';
 import { createOpenDoors } from './interact/openDoors.js';
 import { createPicker } from './interact/picker.js';
+import { createPaintTool } from './interact/paint.js';
 import { installDebugApi } from './core/debug.js';
 import { initPanel } from './ui/panel.js';
 import { createRunButtons } from './ui/runButtons.js';
@@ -27,6 +28,7 @@ const projection = createProjection(scene);
 const openDoors = createOpenDoors(scene);
 const panel = initPanel({ onClose: () => picker.select(null) });
 const runButtons = createRunButtons({ camera, renderer });
+const paint = createPaintTool({ scene, camera, renderer, projection });
 const picker = createPicker({
   scene,
   camera,
@@ -35,8 +37,8 @@ const picker = createPicker({
   projection,
   panel,
   runButtons,
+  paint,
   onPlacementEnd: () => toolbar.setActive('select'),
-  onPaintAttempt: () => toast('Paint tool: Prompt 12'),
 });
 
 function download(blob, filename) {

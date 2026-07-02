@@ -13,10 +13,11 @@ const Y_SHADOW_CATCHER = 0.005;
 const Y_GRID = 0.01;
 const Y_ROOM_FLOOR = FLOOR_TOP_Y;
 
-// Pure generator: (roomParams) => THREE.Group (see CLAUDE.md).
+// Pure generator: (roomParams, materialLibrary) => THREE.Group.
 // Builds the room shell plus the "studio" surroundings: a background-neutral
 // floor, a shadow catcher, and a faint grid outside the room footprint.
-export function buildRoom(room) {
+// room.wallColor / room.floorMaterial are swatch ids (paint wheel targets).
+export function buildRoom(room, matLib) {
   const { width, depth, wallHeight } = room;
   const group = new THREE.Group();
   group.name = 'room';
@@ -24,8 +25,8 @@ export function buildRoom(room) {
   group.add(buildStudioFloor());
   group.add(buildShadowCatcher());
   group.add(buildStudioGrid(width, depth));
-  group.add(buildRoomFloor(width, depth));
-  for (const wall of buildWalls(width, depth, wallHeight)) group.add(wall);
+  group.add(buildRoomFloor(room, matLib));
+  for (const wall of buildWalls(room, wallHeight, matLib)) group.add(wall);
   return group;
 }
 
@@ -111,19 +112,29 @@ function buildStudioGrid(width, depth) {
   return grid;
 }
 
-function buildRoomFloor(width, depth) {
-  const texture = makeTileTexture();
-  texture.repeat.set(
-    width / texture.userData.worldSize,
-    depth / texture.userData.worldSize
-  );
+// Builds a floor material from the swatch id: own texture instance so the
+// repeat can be world-scaled to this room (disposed with the group).
+export function makeFloorMaterial(room, matLib) {
+  const swatch = matLib?.swatches.get(room.floorMaterial ?? 'tile_light');
+  const params = swatch?.params ?? { roughness: 0.92 };
+  const { map, roughnessMap, ...rest } = params;
+  const material = new THREE.MeshStandardMaterial(rest);
+  const texture = (map ?? makeTileTexture)();
+  const worldSize = texture.userData.worldSize ?? 1;
+  texture.repeat.set(room.width / worldSize, room.depth / worldSize);
+  material.map = texture;
+  return material;
+}
+
+export function makeWallMaterial(room, matLib) {
+  const color = matLib?.swatches.get(room.wallColor ?? 'paint_white')?.params.color ?? '#f4f1ec';
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.95, metalness: 0 });
+}
+
+function buildRoomFloor(room, matLib) {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(width, depth),
-    new THREE.MeshStandardMaterial({
-      map: texture,
-      roughness: 0.92,
-      metalness: 0,
-    })
+    new THREE.PlaneGeometry(room.width, room.depth),
+    makeFloorMaterial(room, matLib)
   );
   mesh.name = 'roomFloor';
   mesh.rotation.x = -Math.PI / 2;
@@ -133,13 +144,10 @@ function buildRoomFloor(width, depth) {
   return mesh;
 }
 
-function buildWalls(width, depth, height) {
+function buildWalls(room, height, matLib) {
+  const { width, depth } = room;
   const t = WALL_THICKNESS;
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xf4f1ec,
-    roughness: 0.95,
-    metalness: 0,
-  });
+  const material = makeWallMaterial(room, matLib);
   const walls = [
     { name: 'wall-north', size: [width + 2 * t, height, t], pos: [0, height / 2, -(depth + t) / 2], normal: [0, 0, -1] },
     { name: 'wall-south', size: [width + 2 * t, height, t], pos: [0, height / 2, (depth + t) / 2], normal: [0, 0, 1] },
