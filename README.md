@@ -21,6 +21,23 @@ surface via a radial swatch wheel.
 In the app: **o** toggles cabinet fronts, **f** toggles the FPS/draw-call
 overlay, **Escape** exits any mode, **Delete** removes the selection.
 
+## Deploy (GitHub Pages)
+
+The app is a fully static bundle (no server, no external assets), so it hosts
+on GitHub Pages. The workflow in `.github/workflows/deploy.yml` builds and
+publishes on every push to the default branch. **One-time setup:** in the
+repository, open **Settings → Pages → Build and deployment → Source** and
+select **GitHub Actions**. The site then serves at
+`https://<owner>.github.io/<repo>/`.
+
+Project sites live under `/<repo>/`, so the build needs a matching base path.
+The workflow sets it automatically from the repository name via `VITE_BASE`;
+locally, `npm run dev` and `npm run build` both default to `/`. To reproduce a
+Pages build locally: `VITE_BASE=/<repo>/ npm run build && VITE_BASE=/<repo>/ npm run preview`.
+
+Fixtures are bundled at build time (`import.meta.glob`) rather than fetched
+from `/src`, so they resolve correctly under the Pages base path.
+
 ## Architecture
 
 Single source of truth: the scene is one JSON document in the store. The 3D

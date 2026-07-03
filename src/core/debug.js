@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { applyCameraPreset } from './camera.js';
 import { store } from '../state/store.js';
+import { loadFixtureScene } from '../state/fixtureLoader.js';
 import * as actions from '../state/actions.js';
 
 // Debug API for the screenshot harness (tools/shot.mjs) and future tooling.
@@ -28,15 +29,9 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
     },
 
     async loadFixture(name) {
-      const url = `/src/state/fixtures/${name}.json`;
-      const response = await fetch(url);
-      const type = response.headers.get('content-type') ?? '';
-      // Vite's SPA fallback answers unknown paths with 200 + index.html,
-      // so a status check alone can't detect a missing fixture.
-      if (!response.ok || !type.includes('json')) {
-        throw new Error(`loadFixture: no fixture "${name}" at ${url}`);
-      }
-      store.replace(await response.json());
+      // Bundled at build time (see fixtureLoader) so this resolves under any
+      // deploy base; loadFixtureScene throws on an unknown fixture name.
+      store.replace(await loadFixtureScene(name));
     },
 
     // Full selection: highlight + gizmo + panel + run buttons.

@@ -17,6 +17,7 @@ import { initPanel } from './ui/panel.js';
 import { createRunButtons } from './ui/runButtons.js';
 import { createToolbar, toast } from './ui/toolbar.js';
 import { store } from './state/store.js';
+import { loadFixtureScene } from './state/fixtureLoader.js';
 
 const renderer = createRenderer();
 document.body.appendChild(renderer.domElement);
@@ -136,8 +137,7 @@ const stats = createStats(renderer);
 const persist = initPersistence();
 
 function loadGalley(selectLarder) {
-  return fetch('/src/state/fixtures/galley.json')
-    .then((r) => r.json())
+  return loadFixtureScene('galley')
     .then((scene_) => {
       store.replace(scene_);
       if (selectLarder) picker.select('larder-run');
