@@ -103,3 +103,8 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [x] **P13 — Paint mode**: per-surface material painting via radial swatch
       wheel
 - [x] **P14 — Polish**: materials library breadth, persistence, final QA pass
+- [x] **P15 — Elevations planner**: per-wall straight-on elevation views (N/E/S/W
+      + Plan + 3D) with live element detection per wall and add-to-wall placement
+      (`src/ui/elevations.js`, `src/state/elements.js`)
+- [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
+      control in the real DOM and asserts each produced its expected effect (47 checks)

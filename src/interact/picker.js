@@ -268,6 +268,7 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       return raycaster.intersectObjects(scene.children, true).slice(0, 6).map((h) => ({
         name: h.object.name || h.object.type,
         itemId: h.object.userData.itemId ?? null,
+        surfaceRole: h.object.userData.surfaceRole ?? null,
         visible: h.object.visible,
         d: Number(h.distance.toFixed(2)),
       }));

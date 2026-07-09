@@ -471,6 +471,100 @@ input[type='range'] {
 }
 .file-entry:hover { background: #4a545e; }
 
+/* ---------- Elevations planner ---------- */
+.elev-launch {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  background: #26282cf0;
+  color: #e6e7e9;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  z-index: 12;
+}
+.elev-launch:hover { background: #4a545e; }
+.elev-launch.active { background: #8fa387; color: #1b1d20; font-weight: 600; }
+.elev-panel {
+  position: fixed;
+  top: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  background: #26282cf8;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 12;
+  color: #e6e7e9;
+}
+.elev-panel.hidden { display: none; }
+.elev-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9aa0a6;
+  margin-bottom: 8px;
+}
+.elev-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.elev-view {
+  position: relative;
+  border: 1px solid #3a3d42;
+  border-radius: 8px;
+  background: #313438;
+  color: #e6e7e9;
+  padding: 10px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.elev-view:hover { background: #3d4145; }
+.elev-view.active { background: #8fa387; color: #1b1d20; border-color: #8fa387; font-weight: 600; }
+.elev-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #4a7fe3;
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
+.elev-badge.empty { background: #55585d; }
+.elev-caption {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #c7cacd;
+  min-height: 16px;
+}
+.elev-add {
+  margin-top: 10px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  background: #4a7fe3;
+  color: #fff;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.elev-add:hover { background: #5b8cf0; }
+.elev-add.hidden { display: none; }
+
 /* Preview / walk hide every editor pixel except the view chrome. */
 body.preview-mode .toolbar,
 body.preview-mode .panel,
@@ -478,6 +572,8 @@ body.preview-mode .furnish-row,
 body.preview-mode .plus-btn,
 body.preview-mode .pill-btn,
 body.preview-mode .file-menu,
+body.preview-mode .elev-launch,
+body.preview-mode .elev-panel,
 body.preview-mode .toast,
 body.walk-mode .toolbar,
 body.walk-mode .panel,
@@ -485,6 +581,8 @@ body.walk-mode .furnish-row,
 body.walk-mode .plus-btn,
 body.walk-mode .pill-btn,
 body.walk-mode .file-menu,
+body.walk-mode .elev-launch,
+body.walk-mode .elev-panel,
 body.walk-mode .toast {
   display: none !important;
 }

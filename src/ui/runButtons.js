@@ -63,14 +63,22 @@ export function createRunButtons({ camera, renderer }) {
     setUnitParam(itemId, 'unitType', (it.unitType ?? 'base') === 'tall' ? 'base' : 'tall');
   });
 
+  const lastPos = new WeakMap();
   function place(button, world) {
     v.copy(world).project(camera);
     const visible = v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
     button.classList.toggle('hidden', !visible);
     if (!visible) return;
     const dom = renderer.domElement;
-    button.style.left = `${((v.x + 1) / 2) * dom.clientWidth}px`;
-    button.style.top = `${((1 - v.y) / 2) * dom.clientHeight}px`;
+    const x = Math.round(((v.x + 1) / 2) * dom.clientWidth);
+    const y = Math.round(((1 - v.y) / 2) * dom.clientHeight);
+    // Skip sub-pixel jitter so the button is stable while the camera rests
+    // (otherwise it never settles for pointer input).
+    const prev = lastPos.get(button);
+    if (prev && prev.x === x && prev.y === y) return;
+    lastPos.set(button, { x, y });
+    button.style.left = `${x}px`;
+    button.style.top = `${y}px`;
   }
 
   function hideAll() {

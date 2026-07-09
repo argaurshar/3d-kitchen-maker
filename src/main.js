@@ -9,6 +9,7 @@ import { createPaintTool } from './interact/paint.js';
 import { createPreview } from './interact/preview.js';
 import { createWalk } from './interact/walk.js';
 import { createViewChrome } from './ui/viewChrome.js';
+import { createElevations } from './ui/elevations.js';
 import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
 import { updateTweens } from './core/tween.js';
@@ -96,6 +97,19 @@ const toolbar = createToolbar({
   onShare: shareScene,
 });
 
+const elevations = createElevations({
+  camera,
+  controls,
+  renderer,
+  onAdd: (dir) => {
+    picker.setTool('select');
+    toolbar.setActive('select');
+    applyCameraPreset(camera, controls, 'hero');
+    picker.beginPlacement({ type: 'run', unitType: 'base' });
+    toast(`Drop the base unit against the ${dir} wall`);
+  },
+});
+
 const preview = createPreview({ camera, controls, renderer, picker, projection });
 const walk = createWalk({ camera, controls, renderer, picker });
 const viewChrome = createViewChrome({
@@ -161,6 +175,10 @@ onResize();
 let resolveReady;
 const ready = new Promise((resolve) => (resolveReady = resolve));
 installDebugApi({ camera, controls, renderer, ready, openDoors, picker, projection });
+// Elevations planner hooks for the interaction audit.
+window.__app.setElevation = (dir) => elevations.setView(dir);
+window.__app.elevationCounts = () => elevations.counts();
+window.__app.toggleElevations = () => document.querySelector('.elev-launch').click();
 
 let firstFrame = true;
 let lastTime = 0;

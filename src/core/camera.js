@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+export const DEFAULT_FOV = 40;
+
 // Deterministic viewpoints used by the debug API and the screenshot harness.
 // "close" stands 1.5 m (horizontally) from the scene center at eye height.
 // Distances tuned for the 40deg product-shot FOV.
@@ -13,13 +15,37 @@ const PRESETS = {
 
 export function createCamera() {
   const camera = new THREE.PerspectiveCamera(
-    40,
+    DEFAULT_FOV,
     window.innerWidth / window.innerHeight,
     0.1,
     100
   );
   camera.position.set(5, 4, 7);
   return camera;
+}
+
+// Straight-on elevation framing for one wall. A narrow FOV at a computed
+// distance reads as a near-orthographic elevation and auto-fits the wall's
+// width and the room height for the current viewport aspect. Camera stands
+// on the OPPOSITE side and looks toward the wall (whose facing wall hides).
+const ELEVATION_FOV = 24;
+const ELEVATION_TARGET_Y = 1.1;
+export function elevationView(room, dir, aspect = 1.6) {
+  const { width, depth, wallHeight = 2.7 } = room;
+  const tanHalf = Math.tan((ELEVATION_FOV * Math.PI) / 360);
+  const span = dir === 'north' || dir === 'south' ? width : depth;
+  const distV = wallHeight / 2 / tanHalf;
+  const distH = span / 2 / (tanHalf * aspect);
+  const dist = Math.max(distV, distH) * 1.12 + 0.6;
+  const ty = Math.min(ELEVATION_TARGET_Y, wallHeight / 2);
+  const target = [0, ty, 0];
+  const at = {
+    north: [0, ty, dist],
+    south: [0, ty, -dist],
+    west: [dist, ty, 0],
+    east: [-dist, ty, 0],
+  }[dir];
+  return { position: at, target, fov: ELEVATION_FOV };
 }
 
 export function createControls(camera, domElement) {
@@ -45,5 +71,12 @@ export function applyCameraPreset(camera, controls, preset) {
   }
   camera.position.set(...resolved.position);
   controls.target.set(...resolved.target);
+  // Presets may set a lens (elevations use a narrow FOV); reset to the
+  // product-shot default otherwise so switching back is clean.
+  const fov = resolved.fov ?? DEFAULT_FOV;
+  if (camera.fov !== fov) {
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+  }
   controls.update();
 }

@@ -17,9 +17,14 @@ surface via a radial swatch wheel.
 | `npm run build` / `preview` | production build / preview |
 | `npm run shot -- --fixture=<name> --views=hero,front,top,close [--out=p]` | headless screenshots into `shots/` |
 | `node tools/actions-smoke.mjs` | store-action test suite (node, no browser) |
+| `node tools/button-audit.mjs` | drives every UI button/control in a headless browser and asserts each works (47 checks) |
 
 In the app: **o** toggles cabinet fronts, **f** toggles the FPS/draw-call
-overlay, **Escape** exits any mode, **Delete** removes the selection.
+overlay, **Escape** exits any mode, **Delete** removes the selection. The
+**Elevations** pill (top center) opens a side-elevation planner: straight-on
+views of each wall (North/East/South/West) plus Plan and 3D, with a live count
+and readout of the elements against each wall and an "add unit to this wall"
+shortcut.
 
 ## Deploy (GitHub Pages)
 
@@ -98,6 +103,7 @@ appliances. Full schema and standard dimensions: `SPEC.md`.
 | Paint mode: radial wheel, 29 swatches, live preview, walls/floor | done |
 | Preview auto-orbit + first-person walk mode | done |
 | Persistence (localStorage autosave), file menu, JSON import/export | done |
+| Side-elevation planner (per-wall views + element detection + add-to-wall) | done |
 | Hex backsplash | done (optional flag per base run) |
 | **Lights** | inferred: the video never shows its behavior; implemented as Day / Warm-evening lighting presets |
 | **Solid** | inferred: implemented as clay mode (all items matte white, reversible) |

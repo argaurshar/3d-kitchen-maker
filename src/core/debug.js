@@ -39,6 +39,8 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
       picker?.select(itemId);
     },
     getSelection: () => picker?.getSelectedId() ?? null,
+    getTool: () => picker?.getTool?.() ?? null,
+    isPlacing: () => picker?.isPlacing?.() ?? false,
     setSnap: (v) => picker?.setSnap(v),
 
     // Harness helpers: screen-space projection for scripted pointer input.
