@@ -10,6 +10,7 @@ import { createPreview } from './interact/preview.js';
 import { createWalk } from './interact/walk.js';
 import { createViewChrome } from './ui/viewChrome.js';
 import { createElevations } from './ui/elevations.js';
+import { renderElevationSheet } from './core/drawings.js';
 import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
 import { updateTweens } from './core/tween.js';
@@ -97,16 +98,26 @@ const toolbar = createToolbar({
   onShare: shareScene,
 });
 
+// Shared by "add to this wall" and the missing-element suggestions: reset to
+// an editable 3D view and start ghost placement of the requested element.
+function placeFromPlanner(kind, hint) {
+  picker.setTool('select');
+  toolbar.setActive('select');
+  applyCameraPreset(camera, controls, 'hero');
+  picker.beginPlacement(kind);
+  toast(hint);
+}
+
 const elevations = createElevations({
   camera,
   controls,
   renderer,
-  onAdd: (dir) => {
-    picker.setTool('select');
-    toolbar.setActive('select');
-    applyCameraPreset(camera, controls, 'hero');
-    picker.beginPlacement({ type: 'run', unitType: 'base' });
-    toast(`Drop the base unit against the ${dir} wall`);
+  onAdd: (dir) => placeFromPlanner({ type: 'run', unitType: 'base' }, `Drop the base unit against the ${dir} wall`),
+  onPlace: (kind, label) => placeFromPlanner(kind, `${label} — click to place`),
+  onExport: () => {
+    const sheet = renderElevationSheet({ renderer, scene, camera, controls, projection, sceneState: store.get() });
+    sheet.toBlob((blob) => blob && download(blob, 'kitchen-elevations.png'), 'image/png');
+    toast('Exporting drawing sheet…');
   },
 });
 
@@ -178,6 +189,7 @@ installDebugApi({ camera, controls, renderer, ready, openDoors, picker, projecti
 // Elevations planner hooks for the interaction audit.
 window.__app.setElevation = (dir) => elevations.setView(dir);
 window.__app.elevationCounts = () => elevations.counts();
+window.__app.getSuggestions = () => elevations.suggestions();
 window.__app.toggleElevations = () => document.querySelector('.elev-launch').click();
 
 let firstFrame = true;

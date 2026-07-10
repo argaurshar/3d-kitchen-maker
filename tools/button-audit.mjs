@@ -321,6 +321,56 @@ await guard('elevations', async () => {
   await page.keyboard.press('Escape');
 });
 
+// The launcher toggles, so blind clicks can close a panel a previous block
+// left open — always converge on "open" instead.
+async function ensureElevationsOpen() {
+  const cls = await page.locator('.elev-panel').getAttribute('class');
+  if (cls.includes('hidden')) {
+    await page.locator('.elev-launch').click();
+    await page.waitForTimeout(100);
+  }
+}
+
+// ---------------------------------------------------------------- SUGGESTIONS
+await guard('suggestions', async () => {
+  // The reference kitchen is complete: no suggestions expected.
+  await reload();
+  await ensureElevationsOpen();
+  const noneExpected = await app(() => window.__app.getSuggestions().length);
+  const okShown = (await page.locator('.elev-suggest-ok').count()) > 0;
+  check('suggestions: complete kitchen shows all-clear', noneExpected === 0 && okShown, `pending=${noneExpected}`);
+
+  // Remove the fridge: a "No fridge detected" suggestion must appear live.
+  await app(() => window.__app.actions.removeItem('fridge-1'));
+  await page.waitForTimeout(150);
+  const rows = await page.locator('.elev-suggest-row').evaluateAll((els) => els.map((e) => e.dataset.suggest));
+  const expected = await app(() => window.__app.getSuggestions().map((s) => s.id));
+  check('suggestions: fridge removal surfaces "No fridge detected"',
+    rows.includes('fridge') && JSON.stringify(rows) === JSON.stringify(expected), JSON.stringify(rows));
+
+  // Clicking Add begins ghost placement of the missing element.
+  await page.locator('.elev-suggest-row[data-suggest="fridge"] .elev-suggest-add').click();
+  await page.waitForTimeout(150);
+  check('suggestions: Add begins placement of the missing element', await app(() => window.__app.isPlacing()));
+  await page.keyboard.press('Escape');
+});
+
+// ---------------------------------------------------------------- 2D EXPORT
+await guard('export drawings', async () => {
+  await reload();
+  await ensureElevationsOpen();
+  const camBefore = await app(() => window.__app.getCameraPosition().map((v) => v.toFixed(2)).join(','));
+  const dl = page.waitForEvent('download', { timeout: 15000 });
+  await page.locator('.elev-export').click();
+  const file = await dl;
+  check('elevations: Export 2D drawings downloads a sheet',
+    file.suggestedFilename() === 'kitchen-elevations.png', file.suggestedFilename());
+  await file.saveAs('/tmp/claude-0/-home-user-3d-kitchen-maker/0ce1beff-85ed-5149-9d51-ad4ad392f7a6/scratchpad/kitchen-elevations.png').catch(() => {});
+  // The off-screen renders must leave the editor camera exactly as it was.
+  const camAfter = await app(() => window.__app.getCameraPosition().map((v) => v.toFixed(2)).join(','));
+  check('elevations: export restores the camera', camBefore === camAfter, `${camBefore} vs ${camAfter}`);
+});
+
 // ---------------------------------------------------------------- SUMMARY
 const failed = results.filter((r) => !r.passed);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);

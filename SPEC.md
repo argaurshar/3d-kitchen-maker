@@ -107,4 +107,7 @@ Updated whenever a feature lands (see CLAUDE.md).
       + Plan + 3D) with live element detection per wall and add-to-wall placement
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
-      control in the real DOM and asserts each produced its expected effect (47 checks)
+      control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P17 — Suggestions & drawings**: missing-element detection with one-click add
+      (`suggestMissing` in `src/state/elements.js`) and a 2D drawing-sheet PNG export
+      of all elevations + plan (`src/core/drawings.js`)

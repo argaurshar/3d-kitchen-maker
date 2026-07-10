@@ -9,7 +9,10 @@ const modules = import.meta.glob('./fixtures/*.json');
 export async function loadFixtureScene(name) {
   const loader = modules[`./fixtures/${name}.json`];
   if (!loader) throw new Error(`loadFixture: no fixture "${name}"`);
-  return (await loader()).default;
+  // JSON modules are cached — the same object identity comes back on every
+  // import — but the store must own a scene it can mutate, and a later load
+  // must be pristine. Clone per load (fetch().json() used to guarantee this).
+  return structuredClone((await loader()).default);
 }
 
 export function fixtureNames() {

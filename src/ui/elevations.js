@@ -1,6 +1,6 @@
 import { store } from '../state/store.js';
 import { applyCameraPreset, elevationView } from '../core/camera.js';
-import { WALLS, WALL_LABELS, summarizeWall, elementsByWall } from '../state/elements.js';
+import { WALLS, WALL_LABELS, summarizeWall, elementsByWall, suggestMissing } from '../state/elements.js';
 import { el } from './controls.js';
 
 // Elevations planner: a launcher pill that opens a strip of straight-on side
@@ -16,14 +16,25 @@ const VIEWS = [
   { id: 'iso', label: '3D' },
 ];
 
-export function createElevations({ camera, controls, renderer, onAdd }) {
+export function createElevations({ camera, controls, renderer, onAdd, onPlace, onExport }) {
   const launch = el('button', 'elev-launch', 'Elevations');
   const panel = el('div', 'elev-panel hidden');
   const grid = el('div', 'elev-grid');
   const caption = el('div', 'elev-caption');
   const addBtn = el('button', 'elev-add', '+ Add unit to this wall');
-  panel.append(el('div', 'elev-title', 'Side elevations'), grid, caption, addBtn);
+  const suggestions = el('div', 'elev-suggest');
+  const exportBtn = el('button', 'elev-export', 'Export 2D drawings (PNG)');
+  panel.append(
+    el('div', 'elev-title', 'Side elevations'),
+    grid,
+    caption,
+    addBtn,
+    el('div', 'elev-title elev-suggest-title', 'Suggestions'),
+    suggestions,
+    exportBtn
+  );
   document.body.append(launch, panel);
+  exportBtn.addEventListener('click', () => onExport?.());
 
   let current = null;
   let open = false;
@@ -71,6 +82,28 @@ export function createElevations({ camera, controls, renderer, onAdd }) {
     else if (current === 'plan') caption.textContent = 'Plan view (top-down)';
     else if (current === 'iso') caption.textContent = '3D perspective';
     else caption.textContent = 'Pick a wall to see its elevation';
+    renderSuggestions(scene);
+  }
+
+  // Missing-element checklist: each row names the gap and offers a one-click
+  // Add that starts ghost placement of the fixing element.
+  function renderSuggestions(scene) {
+    suggestions.innerHTML = '';
+    const missing = suggestMissing(scene);
+    if (!missing.length) {
+      suggestions.appendChild(el('div', 'elev-suggest-ok', '✓ All the essentials are here'));
+      return;
+    }
+    for (const s of missing) {
+      const row = el('div', 'elev-suggest-row');
+      row.dataset.suggest = s.id;
+      const text = el('div', 'elev-suggest-text');
+      text.append(el('div', 'elev-suggest-label', s.label), el('div', 'elev-suggest-detail', s.detail));
+      const add = el('button', 'elev-suggest-add', 'Add');
+      add.addEventListener('click', () => onPlace?.(s.add, s.label));
+      row.append(text, add);
+      suggestions.appendChild(row);
+    }
   }
 
   launch.addEventListener('click', () => {
@@ -90,6 +123,7 @@ export function createElevations({ camera, controls, renderer, onAdd }) {
       const g = elementsByWall(store.get());
       return Object.fromEntries(WALLS.map((w) => [w, g[w].length]));
     },
+    suggestions: () => suggestMissing(store.get()),
     close() {
       open = false;
       panel.classList.add('hidden');
