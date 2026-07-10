@@ -28,11 +28,15 @@ views of each wall (North/East/South/West) plus Plan and 3D, with a live count
 and readout of the elements against each wall and an "add unit to this wall"
 shortcut. The planner also auto-suggests missing essentials ("No sink
 detected", "Hob has no extractor hood", …) with one-click Add, and exports a
-2D drawing sheet — all four elevations, plan and a 3D key view with captions,
-plus CAD-style dimension lines: a per-module chain in cm over each run, the
-overall run length, worktop/unit heights and room width × depth. Export as
-PNG, or as SVG where the linework and labels stay vector for crisp printing
-(open in a browser and print to PDF).
+drawing sheet where the floor plan and all four wall elevations are TRUE 2D
+CAD line drawings generated from the scene JSON (`src/draw2d/`): wall cuts,
+door-swing symbols, glazing marks, drawer stacks, oven/hob/sink/fridge/hood
+symbols, backsplash hatching, dashed above-counter items, tall-unit crosses,
+a scale bar and north arrow — plus per-module cm dimension chains, overall
+run lengths, worktop/unit heights, wall spans and room width × depth. Only
+the 3D key view is a raster snapshot. Export as PNG, or as SVG where every
+stroke and label stays vector for crisp printing (open in a browser and
+print to PDF).
 
 ## Deploy (GitHub Pages)
 
@@ -113,7 +117,7 @@ appliances. Full schema and standard dimensions: `SPEC.md`.
 | Persistence (localStorage autosave), file menu, JSON import/export | done |
 | Side-elevation planner (per-wall views + element detection + add-to-wall) | done |
 | Missing-element suggestions with one-click add | done |
-| 2D drawing-sheet export (elevations + plan, chained dimensions, PNG + print SVG) | done |
+| True-2D CAD drawing export (vector plan + elevations, symbols, chained dims, PNG + SVG) | done |
 | Hex backsplash | done (optional flag per base run) |
 | **Lights** | inferred: the video never shows its behavior; implemented as Day / Warm-evening lighting presets |
 | **Solid** | inferred: implemented as clay mode (all items matte white, reversible) |

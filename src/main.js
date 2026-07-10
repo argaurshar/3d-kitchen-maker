@@ -10,8 +10,7 @@ import { createPreview } from './interact/preview.js';
 import { createWalk } from './interact/walk.js';
 import { createViewChrome } from './ui/viewChrome.js';
 import { createElevations } from './ui/elevations.js';
-import { renderElevationSheet, buildSheetModel } from './core/drawings.js';
-import { svgFromSheetModel } from './core/drawingsSvg.js';
+import { buildSheetSvg, rasterizeSvg } from './core/drawings.js';
 import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
 import { updateTweens } from './core/tween.js';
@@ -116,15 +115,17 @@ const elevations = createElevations({
   onAdd: (dir) => placeFromPlanner({ type: 'run', unitType: 'base' }, `Drop the base unit against the ${dir} wall`),
   onPlace: (kind, label) => placeFromPlanner(kind, `${label} — click to place`),
   onExport: () => {
-    picker.select(null); // selection highlight/gizmo must not print on the drawing
-    const sheet = renderElevationSheet({ renderer, scene, camera, controls, projection, sceneState: store.get() });
-    sheet.toBlob((blob) => blob && download(blob, 'kitchen-elevations.png'), 'image/png');
+    picker.select(null); // selection highlight/gizmo must not print on the 3D cell
+    const { svg, width, height } = buildSheetSvg({ renderer, scene, camera, controls, projection, sceneState: store.get() });
+    rasterizeSvg(svg, width, height)
+      .then((canvas) => canvas.toBlob((blob) => blob && download(blob, 'kitchen-elevations.png'), 'image/png'))
+      .catch(() => toast('Export failed'));
     toast('Exporting drawing sheet…');
   },
   onExportSvg: () => {
     picker.select(null);
-    const model = buildSheetModel({ renderer, scene, camera, controls, projection, sceneState: store.get() });
-    download(new Blob([svgFromSheetModel(model)], { type: 'image/svg+xml' }), 'kitchen-elevations.svg');
+    const { svg } = buildSheetSvg({ renderer, scene, camera, controls, projection, sceneState: store.get() });
+    download(new Blob([svg], { type: 'image/svg+xml' }), 'kitchen-elevations.svg');
     toast('Exporting SVG drawing…');
   },
 });
