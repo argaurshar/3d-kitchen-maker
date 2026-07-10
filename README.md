@@ -28,8 +28,9 @@ views of each wall (North/East/South/West) plus Plan and 3D, with a live count
 and readout of the elements against each wall and an "add unit to this wall"
 shortcut. The planner also auto-suggests missing essentials ("No sink
 detected", "Hob has no extractor hood", …) with one-click Add, and exports a
-2D drawing sheet — all four elevations, plan and a 3D key view with captions
-and room dimensions — as a PNG.
+2D drawing sheet — all four elevations, plan and a 3D key view with captions,
+plus CAD-style dimension lines (run lengths, worktop/unit heights, room
+width × depth) — as a PNG.
 
 ## Deploy (GitHub Pages)
 
@@ -110,7 +111,7 @@ appliances. Full schema and standard dimensions: `SPEC.md`.
 | Persistence (localStorage autosave), file menu, JSON import/export | done |
 | Side-elevation planner (per-wall views + element detection + add-to-wall) | done |
 | Missing-element suggestions with one-click add | done |
-| 2D drawing-sheet export (elevations + plan, PNG) | done |
+| 2D drawing-sheet export (elevations + plan + dimension lines, PNG) | done |
 | Hex backsplash | done (optional flag per base run) |
 | **Lights** | inferred: the video never shows its behavior; implemented as Day / Warm-evening lighting presets |
 | **Solid** | inferred: implemented as clay mode (all items matte white, reversible) |

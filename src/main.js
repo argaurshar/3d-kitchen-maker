@@ -115,6 +115,7 @@ const elevations = createElevations({
   onAdd: (dir) => placeFromPlanner({ type: 'run', unitType: 'base' }, `Drop the base unit against the ${dir} wall`),
   onPlace: (kind, label) => placeFromPlanner(kind, `${label} — click to place`),
   onExport: () => {
+    picker.select(null); // selection highlight/gizmo must not print on the drawing
     const sheet = renderElevationSheet({ renderer, scene, camera, controls, projection, sceneState: store.get() });
     sheet.toBlob((blob) => blob && download(blob, 'kitchen-elevations.png'), 'image/png');
     toast('Exporting drawing sheet…');
