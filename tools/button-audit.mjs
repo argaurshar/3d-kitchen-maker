@@ -369,6 +369,14 @@ await guard('export drawings', async () => {
   // The off-screen renders must leave the editor camera exactly as it was.
   const camAfter = await app(() => window.__app.getCameraPosition().map((v) => v.toFixed(2)).join(','));
   check('elevations: export restores the camera', camBefore === camAfter, `${camBefore} vs ${camAfter}`);
+
+  // SVG export for print.
+  const dlSvg = page.waitForEvent('download', { timeout: 15000 });
+  await page.locator('.elev-export-svg').click();
+  const svgFile = await dlSvg;
+  check('elevations: Export SVG downloads a drawing',
+    svgFile.suggestedFilename() === 'kitchen-elevations.svg', svgFile.suggestedFilename());
+  await svgFile.saveAs('/tmp/claude-0/-home-user-3d-kitchen-maker/0ce1beff-85ed-5149-9d51-ad4ad392f7a6/scratchpad/kitchen-elevations.svg').catch(() => {});
 });
 
 // ---------------------------------------------------------------- SUMMARY

@@ -3,75 +3,80 @@ import { applyCameraPreset, elevationView, DEFAULT_FOV } from './camera.js';
 import { WALL_LABELS, summarizeWall, wallOf } from '../state/elements.js';
 import { DIMS } from '../state/schema.js';
 
-// Composes a 2D drawing sheet from the live scene: the four wall elevations
-// plus plan and a 3D key view, each with a caption naming the wall and the
-// elements detected against it, under a title block with the room dimensions.
-// Renders synchronously into the existing renderer canvas (same trick as the
-// Share contact sheet) so the WebGL buffer is still valid for drawImage.
+// Drawing-sheet export. buildSheetModel renders the six views (four wall
+// elevations, plan, 3D key) into per-cell canvases and computes CAD-style
+// dimension annotations in cell-local pixels; renderElevationSheet
+// serializes the model to a canvas for the PNG download, drawingsSvg.js
+// serializes the same model to vector SVG for print. Views render
+// synchronously into the live renderer canvas (same trick as the Share
+// contact sheet), so the WebGL buffer is still valid for drawImage.
 const TITLE_H = 64;
 const CAPTION_H = 30;
 const PAD = 14;
-const DIM_COLOR = '#3f4750';
+export const DIM_COLOR = '#3f4750';
 const FLOOR_Y = 0.02;
+const CHAR_W = 6.5; // approximate label glyph width; the model decides fit
 
 const _v = new THREE.Vector3();
-// World point -> pixel inside the given sheet cell, using the camera as it
-// stands for that cell's render (matrices fresh from the render itself).
-function project(camera, world, cx, cy, cw, ch) {
+const meters = (v) => `${v.toFixed(2)} m`;
+
+function cellPoint(camera, world, cw, ch) {
   _v.set(...world).project(camera);
-  return [cx + ((_v.x + 1) / 2) * cw, cy + ((1 - _v.y) / 2) * ch];
+  return [((_v.x + 1) / 2) * cw, ((1 - _v.y) / 2) * ch];
 }
 
-// CAD-style dimension line: main stroke, perpendicular end ticks, centered
-// label on a white halo so it stays readable over the render.
-function dimLine(ctx, a, b, label) {
+// A dimension: main line a->b, perpendicular end ticks, centered label.
+// Chain labels that don't fit their segment are dropped here so both
+// serializers agree (SVG cannot measure text); primary labels (overall
+// lengths, heights, room sizes) always render, overflowing if they must.
+function makeDim(a, b, label, { optional = false } = {}) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const len = Math.hypot(dx, dy) || 1;
   const nx = (-dy / len) * 4;
   const ny = (dx / len) * 4;
-  ctx.strokeStyle = DIM_COLOR;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(a[0], a[1]);
-  ctx.lineTo(b[0], b[1]);
-  for (const p of [a, b]) {
-    ctx.moveTo(p[0] - nx, p[1] - ny);
-    ctx.lineTo(p[0] + nx, p[1] + ny);
-  }
-  ctx.stroke();
-  ctx.font = '11px system-ui, sans-serif';
-  const mx = (a[0] + b[0]) / 2;
-  const my = (a[1] + b[1]) / 2;
-  const w = ctx.measureText(label).width;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(mx - w / 2 - 3, my - 7, w + 6, 14);
-  ctx.fillStyle = DIM_COLOR;
-  ctx.fillText(label, mx - w / 2, my + 4);
+  const fits = !optional || label.length * CHAR_W + 6 <= len;
+  return {
+    a,
+    b,
+    label: fits ? label : '',
+    mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+    ticks: [
+      [a[0] - nx, a[1] - ny, a[0] + nx, a[1] + ny],
+      [b[0] - nx, b[1] - ny, b[0] + nx, b[1] + ny],
+    ],
+  };
 }
 
-const m = (v) => `${v.toFixed(2)} m`;
-// Local +x rotated by the item's rotationY into world (matches build/run.js).
-const runEnd = (item, rw) => [
-  item.position[0] + rw * Math.cos(item.rotationY ?? 0),
-  item.position[1] - rw * Math.sin(item.rotationY ?? 0),
-];
-
-// Run lengths under each run on this wall, plus one vertical height marker
-// (worktop top, tall-unit or wall-unit top — whichever the wall carries).
-function annotateElevation(ctx, camera, wall, sceneState, cx, cy, cw, ch) {
-  const at = (world) => project(camera, world, cx, cy, cw, ch);
+// Per run: a chain of module widths (cm, kitchen convention) closest to the
+// object, the overall length (m) below it, staggered per run; plus one
+// vertical height marker per wall (worktop top, tall or wall-unit top).
+function elevationDims(camera, wall, sceneState, cw, ch) {
+  const at = (world) => cellPoint(camera, world, cw, ch);
+  const dims = [];
   const runs = sceneState.items.filter(
     (i) => i.kind === 'run' && (i.unitType ?? 'base') !== 'island' && wallOf(i) === wall
   );
   runs.forEach((run, index) => {
-    const rw = (run.modules ?? []).reduce((s, mod) => s + mod.width, 0);
+    const widths = (run.modules ?? []).map((mod) => mod.width);
+    const rw = widths.reduce((s, w) => s + w, 0);
     if (rw < 0.05) return;
-    const [ex, ez] = runEnd(run, rw);
-    const a = at([run.position[0], FLOOR_Y, run.position[1]]);
-    const b = at([ex, FLOOR_Y, ez]);
-    const drop = 16 + index * 15; // stagger stacked runs on the same wall
-    dimLine(ctx, [a[0], a[1] + drop], [b[0], b[1] + drop], m(rw));
+    const dir = run.rotationY ?? 0;
+    const pt = (dist) =>
+      at([run.position[0] + dist * Math.cos(dir), FLOOR_Y, run.position[1] - dist * Math.sin(dir)]);
+    const drop = (px, dy) => [px[0], px[1] + dy];
+    const base = 16 + index * 32;
+    if (widths.length > 1) {
+      let cum = 0;
+      for (const w of widths) {
+        dims.push(
+          makeDim(drop(pt(cum), base), drop(pt(cum + w), base), String(Math.round(w * 100)), { optional: true })
+        );
+        cum += w;
+      }
+    }
+    const overall = base + (widths.length > 1 ? 15 : 0);
+    dims.push(makeDim(drop(pt(0), overall), drop(pt(rw), overall), meters(rw)));
   });
 
   const height = runs.some((r) => (r.unitType ?? 'base') === 'base')
@@ -81,64 +86,59 @@ function annotateElevation(ctx, camera, wall, sceneState, cx, cy, cw, ch) {
       : runs.some((r) => r.unitType === 'wall')
         ? DIMS.wallUnitMount + DIMS.wallUnitHeight
         : null;
-  if (height == null) return;
-  const { width, depth } = sceneState.room;
-  const span = {
-    north: [[-width / 2, -depth / 2], [width / 2, -depth / 2]],
-    south: [[-width / 2, depth / 2], [width / 2, depth / 2]],
-    west: [[-width / 2, -depth / 2], [-width / 2, depth / 2]],
-    east: [[width / 2, -depth / 2], [width / 2, depth / 2]],
-  }[wall];
-  const corners = span.map(([x, z]) => at([x, FLOOR_Y, z]));
-  const left = corners[0][0] <= corners[1][0] ? span[0] : span[1];
-  const foot = at([left[0], FLOOR_Y, left[1]]);
-  const top = at([left[0], height, left[1]]);
-  dimLine(ctx, [foot[0] - 18, foot[1]], [top[0] - 18, top[1]], m(height));
+  if (height != null) {
+    const { width, depth } = sceneState.room;
+    const span = {
+      north: [[-width / 2, -depth / 2], [width / 2, -depth / 2]],
+      south: [[-width / 2, depth / 2], [width / 2, depth / 2]],
+      west: [[-width / 2, -depth / 2], [-width / 2, depth / 2]],
+      east: [[width / 2, -depth / 2], [width / 2, depth / 2]],
+    }[wall];
+    const corners = span.map(([x, z]) => at([x, FLOOR_Y, z]));
+    const left = corners[0][0] <= corners[1][0] ? span[0] : span[1];
+    const foot = at([left[0], FLOOR_Y, left[1]]);
+    const top = at([left[0], height, left[1]]);
+    dims.push(makeDim([foot[0] - 18, foot[1]], [top[0] - 18, top[1]], meters(height)));
+  }
+  return dims;
 }
 
 // Room width and depth along the plan's bottom and left edges.
-function annotatePlan(ctx, camera, room, cx, cy, cw, ch) {
-  const at = (world) => project(camera, world, cx, cy, cw, ch);
+function planDims(camera, room, cw, ch) {
+  const at = (world) => cellPoint(camera, world, cw, ch);
   const { width, depth } = room;
   const sw = at([-width / 2, FLOOR_Y, depth / 2]);
   const se = at([width / 2, FLOOR_Y, depth / 2]);
   const nw = at([-width / 2, FLOOR_Y, -depth / 2]);
-  dimLine(ctx, [sw[0], sw[1] + 16], [se[0], se[1] + 16], m(width));
-  dimLine(ctx, [nw[0] - 16, nw[1]], [sw[0] - 16, sw[1]], m(depth));
+  return [
+    makeDim([sw[0], sw[1] + 16], [se[0], se[1] + 16], meters(width)),
+    makeDim([nw[0] - 16, nw[1]], [sw[0] - 16, sw[1]], meters(depth)),
+  ];
 }
 
-export function renderElevationSheet({ renderer, scene, camera, controls, projection, sceneState }) {
+export function buildSheetModel({ renderer, scene, camera, controls, projection, sceneState }) {
   const dom = renderer.domElement;
   const cw = Math.round(dom.width / 2);
   const ch = Math.round(dom.height / 2);
   const cell = ch + CAPTION_H;
-  const sheet = document.createElement('canvas');
-  sheet.width = cw * 2 + PAD * 3;
-  sheet.height = TITLE_H + cell * 3 + PAD * 4;
-  const ctx = sheet.getContext('2d');
-
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, sheet.width, sheet.height);
-
   const room = sceneState.room;
-  ctx.fillStyle = '#1b1d20';
-  ctx.font = '600 22px system-ui, sans-serif';
-  ctx.fillText('Kitchen — elevations & plan', PAD, 32);
-  ctx.font = '13px system-ui, sans-serif';
-  ctx.fillStyle = '#5f646a';
-  ctx.fillText(
-    `Room ${room.width.toFixed(2)} × ${room.depth.toFixed(2)} m · walls ${room.wallHeight.toFixed(2)} m · ${sceneState.items.length} elements`,
-    PAD,
-    52
-  );
-
+  const model = {
+    width: cw * 2 + PAD * 3,
+    height: TITLE_H + cell * 3 + PAD * 4,
+    cw,
+    ch,
+    title: 'Kitchen — elevations & plan',
+    subtitle: `Room ${room.width.toFixed(2)} × ${room.depth.toFixed(2)} m · walls ${room.wallHeight.toFixed(2)} m · ${sceneState.items.length} elements`,
+    cells: [],
+  };
   const saved = { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov };
-  const views = [
+
+  const layout = [
     ['north', 'south'],
     ['east', 'west'],
     ['plan', 'iso'],
   ];
-  views.forEach((row, r) =>
+  layout.forEach((row, r) =>
     row.forEach((view, c) => {
       const x = PAD + c * (cw + PAD);
       const y = TITLE_H + PAD + r * (cell + PAD);
@@ -150,29 +150,22 @@ export function renderElevationSheet({ renderer, scene, camera, controls, projec
       );
       projection.update(camera); // refresh wall auto-hide for this viewpoint
       renderer.render(scene, camera);
-      ctx.drawImage(dom, x, y, cw, ch);
-      // Dimension annotations, clipped to the cell. The camera matrices are
-      // fresh from the render above, so world->pixel projection is exact.
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x, y, cw, ch);
-      ctx.clip();
-      if (isWall) annotateElevation(ctx, camera, view, sceneState, x, y, cw, ch);
-      else if (view === 'plan') annotatePlan(ctx, camera, room, x, y, cw, ch);
-      ctx.restore();
-      ctx.strokeStyle = '#d6d8db';
-      ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
-      ctx.fillStyle = '#1b1d20';
-      ctx.font = '600 13px system-ui, sans-serif';
-      const title = isWall ? `${WALL_LABELS[view]} elevation` : view === 'plan' ? 'Plan' : '3D view';
-      ctx.fillText(title, x, y + ch + 19);
-      if (isWall) {
-        const titleW = ctx.measureText(title).width;
-        ctx.fillStyle = '#5f646a';
-        ctx.font = '12px system-ui, sans-serif';
-        const detail = summarizeWall(sceneState, view);
-        ctx.fillText(detail.length > 64 ? `${detail.slice(0, 61)}…` : detail, x + titleW + 12, y + ch + 19);
-      }
+      const snap = document.createElement('canvas');
+      snap.width = cw;
+      snap.height = ch;
+      snap.getContext('2d').drawImage(dom, 0, 0, cw, ch);
+      model.cells.push({
+        x,
+        y,
+        snap,
+        title: isWall ? `${WALL_LABELS[view]} elevation` : view === 'plan' ? 'Plan' : '3D view',
+        detail: isWall ? summarizeWall(sceneState, view) : '',
+        dims: isWall
+          ? elevationDims(camera, view, sceneState, cw, ch)
+          : view === 'plan'
+            ? planDims(camera, room, cw, ch)
+            : [],
+      });
     })
   );
 
@@ -182,5 +175,65 @@ export function renderElevationSheet({ renderer, scene, camera, controls, projec
   camera.updateProjectionMatrix();
   controls.update();
   projection.update(camera);
+  return model;
+}
+
+function drawDim(ctx, ox, oy, d) {
+  ctx.strokeStyle = DIM_COLOR;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(ox + d.a[0], oy + d.a[1]);
+  ctx.lineTo(ox + d.b[0], oy + d.b[1]);
+  for (const [x1, y1, x2, y2] of d.ticks) {
+    ctx.moveTo(ox + x1, oy + y1);
+    ctx.lineTo(ox + x2, oy + y2);
+  }
+  ctx.stroke();
+  if (!d.label) return;
+  ctx.font = '11px system-ui, sans-serif';
+  const w = ctx.measureText(d.label).width;
+  const [mx, my] = [ox + d.mid[0], oy + d.mid[1]];
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(mx - w / 2 - 3, my - 7, w + 6, 14);
+  ctx.fillStyle = DIM_COLOR;
+  ctx.fillText(d.label, mx - w / 2, my + 4);
+}
+
+export function renderElevationSheet(deps) {
+  const model = buildSheetModel(deps);
+  const sheet = document.createElement('canvas');
+  sheet.width = model.width;
+  sheet.height = model.height;
+  const ctx = sheet.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, model.width, model.height);
+  ctx.fillStyle = '#1b1d20';
+  ctx.font = '600 22px system-ui, sans-serif';
+  ctx.fillText(model.title, PAD, 32);
+  ctx.font = '13px system-ui, sans-serif';
+  ctx.fillStyle = '#5f646a';
+  ctx.fillText(model.subtitle, PAD, 52);
+
+  for (const cell of model.cells) {
+    ctx.drawImage(cell.snap, cell.x, cell.y);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cell.x, cell.y, model.cw, model.ch);
+    ctx.clip();
+    for (const d of cell.dims) drawDim(ctx, cell.x, cell.y, d);
+    ctx.restore();
+    ctx.strokeStyle = '#d6d8db';
+    ctx.strokeRect(cell.x + 0.5, cell.y + 0.5, model.cw - 1, model.ch - 1);
+    ctx.fillStyle = '#1b1d20';
+    ctx.font = '600 13px system-ui, sans-serif';
+    ctx.fillText(cell.title, cell.x, cell.y + model.ch + 19);
+    if (cell.detail) {
+      const titleW = ctx.measureText(cell.title).width;
+      ctx.fillStyle = '#5f646a';
+      ctx.font = '12px system-ui, sans-serif';
+      const detail = cell.detail.length > 64 ? `${cell.detail.slice(0, 61)}…` : cell.detail;
+      ctx.fillText(detail, cell.x + titleW + 12, cell.y + model.ch + 19);
+    }
+  }
   return sheet;
 }

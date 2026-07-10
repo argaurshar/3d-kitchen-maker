@@ -16,14 +16,17 @@ const VIEWS = [
   { id: 'iso', label: '3D' },
 ];
 
-export function createElevations({ camera, controls, renderer, onAdd, onPlace, onExport }) {
+export function createElevations({ camera, controls, renderer, onAdd, onPlace, onExport, onExportSvg }) {
   const launch = el('button', 'elev-launch', 'Elevations');
   const panel = el('div', 'elev-panel hidden');
   const grid = el('div', 'elev-grid');
   const caption = el('div', 'elev-caption');
   const addBtn = el('button', 'elev-add', '+ Add unit to this wall');
   const suggestions = el('div', 'elev-suggest');
-  const exportBtn = el('button', 'elev-export', 'Export 2D drawings (PNG)');
+  const exportRow = el('div', 'elev-export-row');
+  const exportBtn = el('button', 'elev-export', 'Export PNG');
+  const exportSvgBtn = el('button', 'elev-export-svg', 'Export SVG (print)');
+  exportRow.append(exportBtn, exportSvgBtn);
   panel.append(
     el('div', 'elev-title', 'Side elevations'),
     grid,
@@ -31,10 +34,12 @@ export function createElevations({ camera, controls, renderer, onAdd, onPlace, o
     addBtn,
     el('div', 'elev-title elev-suggest-title', 'Suggestions'),
     suggestions,
-    exportBtn
+    el('div', 'elev-title elev-suggest-title', '2D drawings'),
+    exportRow
   );
   document.body.append(launch, panel);
   exportBtn.addEventListener('click', () => onExport?.());
+  exportSvgBtn.addEventListener('click', () => onExportSvg?.());
 
   let current = null;
   let open = false;

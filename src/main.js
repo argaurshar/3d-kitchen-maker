@@ -10,7 +10,8 @@ import { createPreview } from './interact/preview.js';
 import { createWalk } from './interact/walk.js';
 import { createViewChrome } from './ui/viewChrome.js';
 import { createElevations } from './ui/elevations.js';
-import { renderElevationSheet } from './core/drawings.js';
+import { renderElevationSheet, buildSheetModel } from './core/drawings.js';
+import { svgFromSheetModel } from './core/drawingsSvg.js';
 import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
 import { updateTweens } from './core/tween.js';
@@ -119,6 +120,12 @@ const elevations = createElevations({
     const sheet = renderElevationSheet({ renderer, scene, camera, controls, projection, sceneState: store.get() });
     sheet.toBlob((blob) => blob && download(blob, 'kitchen-elevations.png'), 'image/png');
     toast('Exporting drawing sheet…');
+  },
+  onExportSvg: () => {
+    picker.select(null);
+    const model = buildSheetModel({ renderer, scene, camera, controls, projection, sceneState: store.get() });
+    download(new Blob([svgFromSheetModel(model)], { type: 'image/svg+xml' }), 'kitchen-elevations.svg');
+    toast('Exporting SVG drawing…');
   },
 });
 

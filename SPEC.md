@@ -109,6 +109,7 @@ Updated whenever a feature lands (see CLAUDE.md).
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
 - [x] **P17 — Suggestions & drawings**: missing-element detection with one-click add
-      (`suggestMissing` in `src/state/elements.js`) and a 2D drawing-sheet PNG export
-      of all elevations + plan with CAD-style dimension lines — run lengths, worktop/
-      unit heights, room width × depth (`src/core/drawings.js`)
+      (`suggestMissing` in `src/state/elements.js`) and a 2D drawing-sheet export of
+      all elevations + plan with CAD-style dimension lines — per-module cm chains,
+      run lengths, worktop/unit heights, room width × depth — as PNG or vector SVG
+      for print (`src/core/drawings.js` model + serializers, `src/core/drawingsSvg.js`)
