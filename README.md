@@ -1,5 +1,7 @@
 # 3D Kitchen Maker
 
+**Live demo: <https://argaurshar.github.io/3d-kitchen-maker/>**
+
 A web-based parametric kitchen configurator built with Vite, plain JavaScript
 and three.js — no frameworks, no downloaded assets (every texture is a seeded
 procedural canvas). Users place cabinet runs, tall/wall units, islands,
