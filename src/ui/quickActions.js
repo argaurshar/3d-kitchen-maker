@@ -34,9 +34,17 @@ export function createQuickActions({ camera, renderer, projection, picker, paint
   make('◐', 'Materials', () => {
     const group = id() && projection.getItemGroup(id());
     if (!group) return;
+    // Role priority, not traversal order: painting the FRONTS is the common
+    // intent, so prefer them over carcass/worktop meshes met earlier.
     let target = null;
+    let best = PAINTABLE.length;
     group.traverse((n) => {
-      if (!target && n.isMesh && PAINTABLE.includes(n.userData.surfaceRole)) target = n;
+      if (!n.isMesh) return;
+      const rank = PAINTABLE.indexOf(n.userData.surfaceRole);
+      if (rank >= 0 && rank < best) {
+        best = rank;
+        target = n;
+      }
     });
     if (!target) return;
     paint.openAt({ object: target, point: target.getWorldPosition(new THREE.Vector3()) });

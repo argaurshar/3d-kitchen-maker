@@ -491,7 +491,8 @@ input[type='range'] {
   transition: stroke-width 0.08s ease;
 }
 .wheel-seg.hover { stroke: #ffffff; stroke-width: 2.5; }
-.wheel-disc { fill: #26282cf2; pointer-events: none; }
+/* The disc is a button now (cycles swatch pages) — it must take pointers. */
+.wheel-disc { fill: #26282cf2; pointer-events: auto; cursor: pointer; }
 .wheel-label,
 .wheel-sublabel { pointer-events: none; }
 
@@ -752,4 +753,13 @@ body.walk-mode .toast {
   font: 700 10px system-ui, sans-serif;
   letter-spacing: 0.12em;
   text-anchor: middle;
+}
+
+.wheel-pagelabel {
+  fill: #b9c0c6;
+  font: 600 10px system-ui, sans-serif;
+  text-anchor: middle;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
 }

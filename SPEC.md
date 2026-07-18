@@ -108,6 +108,13 @@ Updated whenever a feature lands (see CLAUDE.md).
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P21 — Materials & lighting**: 31 new finish swatches across laminate /
+      acrylic / PU / membrane / veneer / super-matt / lacquered-glass families
+      (`src/materials/swatchesFinishes.js`); paged material wheel (center disc
+      cycles Classic | Finishes); under-cabinet LED strips on wall runs
+      (`underLight`, emissive strip + warm point light, surfaceRole `ledStrip`);
+      three-state lighting day / evening / night with per-preset emissive boost
+      and environment-intensity scaling
 - [x] **P20 — Shutter systems**: per-door front styles hinged / top-hung lift-up /
       bi-fold (applyOpenAmount contract extended; `src/build/frontsLift.js`),
       aluminium glass-profile shutters with silver/black/gold frames and

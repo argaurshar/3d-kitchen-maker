@@ -150,6 +150,11 @@ function renderRunPanel(body, item) {
   const structure = addSection(body, 'structure', 'Structure');
   structure.appendChild(toggle('Worktop', item.worktop !== false, (v) => run(actions.setUnitParam(item.id, 'worktop', v))));
   structure.appendChild(toggle('Plinth (toe kick)', item.plinth !== false, (v) => run(actions.setUnitParam(item.id, 'plinth', v))));
+  if ((item.unitType ?? 'base') === 'wall') {
+    structure.appendChild(
+      toggle('Under-cabinet LED', item.underLight === true, (v) => run(actions.setUnitParam(item.id, 'underLight', v)))
+    );
+  }
   if ((item.unitType ?? 'base') === 'island') {
     const row = el('div', 'row');
     row.appendChild(el('label', 'row-label', 'Side faces'));

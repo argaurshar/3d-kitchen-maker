@@ -1,4 +1,5 @@
 import { makeWoodTexture, makeBrushedTexture, makeTileTexture, makeFlutedTexture } from './textures.js';
+import { FINISH_SWATCHES } from './swatchesFinishes.js';
 import {
   makeMarbleTexture,
   makeGraniteTexture,
@@ -136,6 +137,13 @@ export const SWATCHES = [
       roughnessMap: () => makeFlutedTexture(),
     },
   },
+  // Under-cabinet LED strip (emissive; scaled by the light preset).
+  {
+    id: 'led_strip',
+    label: 'LED Strip',
+    category: 'glass',
+    params: { color: '#fff6e6', roughness: 0.4, metalness: 0, emissive: '#ffe2ae', emissiveIntensity: 2.2 },
+  },
   // Backlit shutter pane: warm emissive glow through frosted glass.
   {
     id: 'glass_led',
@@ -193,4 +201,5 @@ export const SWATCHES = [
     category: 'appliance',
     params: { color: '#d8c4a8', roughness: 0.38, metalness: 0.85, roughnessMap: () => makeBrushedTexture({ strength: 0.4, seed: 44 }) },
   },
+  ...FINISH_SWATCHES,
 ];

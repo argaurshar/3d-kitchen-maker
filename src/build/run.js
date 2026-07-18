@@ -53,6 +53,21 @@ export function buildRun(item, matLib) {
     addIslandPanels(group, item, cursor, ctx, matLib);
     if (item.islandFaces === 'shutter') addIslandShutterFaces(group, item, cursor, ctx, matLib);
   }
+  // Under-cabinet LED for wall runs: emissive strip along the front lower
+  // edge plus one warm point light (no shadows) for the task-light pool.
+  if (item.underLight && ctx.unitType === 'wall' && cursor > 0) {
+    const strip = box(cursor - 0.02, 0.008, 0.03, matLib.get('led_strip'), {
+      itemId: item.id,
+      surfaceRole: 'ledStrip',
+    });
+    strip.castShadow = false;
+    strip.position.set(cursor / 2, ctx.yBase - 0.004, ctx.carcassDepth - 0.03);
+    group.add(strip);
+    const glow = new THREE.PointLight(0xffe2ae, 0.55, 1.6, 2);
+    glow.position.set(cursor / 2, ctx.yBase - 0.08, ctx.carcassDepth + 0.12);
+    group.add(glow);
+  }
+
   // Optional backsplash strip between worktop and wall-unit height.
   if (item.backsplash && ctx.unitType === 'base' && cursor > 0) {
     const y0 = ctx.yBase + ctx.carcassHeight + DIMS.worktopThickness;

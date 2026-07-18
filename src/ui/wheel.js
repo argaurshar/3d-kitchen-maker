@@ -2,13 +2,30 @@ import { SWATCHES } from '../materials/swatches.js';
 import { el } from './controls.js';
 
 // SVG radial swatch wheel, anchored to a 3D point (repositioned per frame).
-// Rings: inner PAINT, middle WOOD+STONE, outer METAL + appliance neutrals.
+// Two pages (center disc cycles them): Classic = paint/wood/stone/metal,
+// Finishes = the laminate/acrylic/PU/membrane/veneer/super-matt/glass
+// families. Rings stay under ~16 segments each so slices remain clickable.
 const SIZE = 430;
 const C = SIZE / 2;
-const RINGS = [
-  { categories: ['paint'], r0: 64, r1: 112 },
-  { categories: ['wood', 'stone'], r0: 116, r1: 164 },
-  { categories: ['metal', 'appliance'], r0: 168, r1: 208 },
+const PAGES = [
+  {
+    id: 'classic',
+    label: 'Classic',
+    rings: [
+      { categories: ['paint'], r0: 64, r1: 112 },
+      { categories: ['wood', 'stone'], r0: 116, r1: 164 },
+      { categories: ['metal', 'appliance'], r0: 168, r1: 208 },
+    ],
+  },
+  {
+    id: 'finishes',
+    label: 'Finishes',
+    rings: [
+      { categories: ['laminate'], r0: 64, r1: 112 },
+      { categories: ['acrylic', 'pu', 'membrane'], r0: 116, r1: 164 },
+      { categories: ['veneer', 'supermatt', 'backglass'], r0: 168, r1: 208 },
+    ],
+  },
 ];
 const GAP_DEG = 1.6;
 
@@ -86,37 +103,62 @@ export function createWheel({ onPreview, onRevert, onCommit }) {
   let target = null;
   let lastX = -1;
   let lastY = -1;
+  let pageIndex = 0;
+  const pageGroups = [];
+
+  const labelPage = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  labelPage.setAttribute('x', C);
+  labelPage.setAttribute('y', C + 34);
+  labelPage.setAttribute('class', 'wheel-pagelabel');
 
   function buildSegments() {
-    for (const ring of RINGS) {
-      const swatches = SWATCHES.filter((s) => ring.categories.includes(s.category));
-      const step = 360 / swatches.length;
-      swatches.forEach((swatch, i) => {
-        const a0 = i * step + GAP_DEG / 2;
-        const a1 = (i + 1) * step - GAP_DEG / 2;
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', arcPath(ring.r0, ring.r1, a0, a1));
-        path.setAttribute('fill', swatchFill(swatch, defs));
-        path.setAttribute('class', 'wheel-seg');
-        path.setAttribute('data-swatch', swatch.id);
-        path.addEventListener('pointerenter', () => {
-          labelTop.textContent = swatch.label;
-          path.classList.add('hover');
-          onPreview(swatch.id);
+    for (const page of PAGES) {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('data-page', page.id);
+      for (const ring of page.rings) {
+        const swatches = SWATCHES.filter((s) => ring.categories.includes(s.category));
+        const step = 360 / swatches.length;
+        swatches.forEach((swatch, i) => {
+          const a0 = i * step + GAP_DEG / 2;
+          const a1 = (i + 1) * step - GAP_DEG / 2;
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', arcPath(ring.r0, ring.r1, a0, a1));
+          path.setAttribute('fill', swatchFill(swatch, defs));
+          path.setAttribute('class', 'wheel-seg');
+          path.setAttribute('data-swatch', swatch.id);
+          path.addEventListener('pointerenter', () => {
+            labelTop.textContent = swatch.label;
+            path.classList.add('hover');
+            onPreview(swatch.id);
+          });
+          path.addEventListener('pointerleave', () => {
+            labelTop.textContent = '';
+            path.classList.remove('hover');
+            onRevert();
+          });
+          path.addEventListener('click', (e) => {
+            e.stopPropagation();
+            onCommit(swatch.id);
+          });
+          g.appendChild(path);
         });
-        path.addEventListener('pointerleave', () => {
-          labelTop.textContent = '';
-          path.classList.remove('hover');
-          onRevert();
-        });
-        path.addEventListener('click', (e) => {
-          e.stopPropagation();
-          onCommit(swatch.id);
-        });
-        svg.appendChild(path);
-      });
+      }
+      svg.appendChild(g);
+      pageGroups.push(g);
     }
-    svg.append(disc, labelTop, labelSub);
+    svg.append(disc, labelTop, labelSub, labelPage);
+    disc.style.cursor = 'pointer';
+    disc.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setPage((pageIndex + 1) % PAGES.length);
+    });
+    setPage(0);
+  }
+
+  function setPage(index) {
+    pageIndex = index;
+    pageGroups.forEach((g, i) => (g.style.display = i === pageIndex ? '' : 'none'));
+    labelPage.textContent = `${PAGES[pageIndex].label} ▸`;
   }
   buildSegments();
 

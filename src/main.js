@@ -118,7 +118,7 @@ const toolbar = createToolbar({
   onPlace: beginPlace,
   onSnap: (v) => picker.setSnap(v),
   onSolid: (v) => projection.setClay(v),
-  onLights: (name) => applyLightPreset(lights, name),
+  onLights: (name) => applyLightPreset(lights, name, scene),
   onShare: shareScene,
   onBuild: () => roomPanel.toggle(),
   onFurnish: () => catalog.toggle(),

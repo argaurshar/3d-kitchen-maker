@@ -80,8 +80,12 @@ export function createToolbar(handlers) {
         btn.classList.toggle('on', state.solid);
         handlers.onSolid?.(state.solid);
       } else if (item.id === 'lights') {
-        state.lights = state.lights === 'day' ? 'evening' : 'day';
-        btn.classList.toggle('on', state.lights === 'evening');
+        // Cycle day -> evening -> night (night showcases LED lighting).
+        const cycle = ['day', 'evening', 'night'];
+        state.lights = cycle[(cycle.indexOf(state.lights) + 1) % cycle.length];
+        btn.classList.toggle('on', state.lights !== 'day');
+        btn.querySelector('.tb-label').textContent =
+          state.lights === 'day' ? 'Lights' : state.lights === 'evening' ? 'Evening' : 'Night';
         handlers.onLights?.(state.lights);
       } else if (item.id === 'share') {
         handlers.onShare?.();

@@ -67,7 +67,7 @@ export function duplicateItem(itemId) {
 export function setUnitParam(itemId, key, value) {
   const { index, item } = findItem(itemId);
   if (!item) return fail(`no item "${itemId}"`);
-  if (key === 'worktop' || key === 'plinth' || key === 'openFronts' || key === 'backsplash') {
+  if (key === 'worktop' || key === 'plinth' || key === 'openFronts' || key === 'backsplash' || key === 'underLight') {
     store.set(`items.${index}.${key}`, Boolean(value));
     return ok();
   }

@@ -27,9 +27,25 @@ export class MaterialLibrary {
     }
     material.name = id;
     material.userData.shared = true;
+    if (swatch?.params.emissiveIntensity != null) {
+      material.userData.baseEmissive = swatch.params.emissiveIntensity;
+      material.emissiveIntensity = swatch.params.emissiveIntensity * emissiveBoost;
+    }
     this.cache.set(id, material);
     return material;
   }
 }
 
 export const materialLibrary = new MaterialLibrary();
+
+// Light presets scale every emissive material (LED strips, backlit panes)
+// so glow reads stronger as the ambient light drops — a cheap stand-in for
+// bloom. Shared-material mutation: zero rebuilds.
+let emissiveBoost = 1;
+export function setEmissiveBoost(factor) {
+  emissiveBoost = factor;
+  for (const material of materialLibrary.cache.values()) {
+    const base = material.userData.baseEmissive;
+    if (base != null) material.emissiveIntensity = base * factor;
+  }
+}

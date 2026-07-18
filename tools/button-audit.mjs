@@ -86,8 +86,9 @@ check('toolbar: Solid restores real materials', clayRestored === clayBefore);
 
 await tb('lights').click();
 check('toolbar: Lights toggles evening', (await tb('lights').getAttribute('class')).includes('on'));
-await tb('lights').click();
-check('toolbar: Lights toggles back to day', !(await tb('lights').getAttribute('class')).includes('on'));
+await tb('lights').click(); // night
+await tb('lights').click(); // back to day (3-state cycle)
+check('toolbar: Lights cycles back to day', !(await tb('lights').getAttribute('class')).includes('on'));
 
 await tb('build').click();
 await page.waitForTimeout(120);
@@ -642,6 +643,75 @@ await guard('shutters', async () => {
   const segTexts = await page.locator('.panel-body .seg-btn').allTextContents();
   check('panel: shutter controls present (Lift-up / J-Profile)',
     segTexts.includes('Lift-up') && segTexts.includes('J-Profile'), segTexts.join('|'));
+});
+
+// ---------------------------------------------------------------- MATERIALS + LED
+await guard('materials + led', async () => {
+  await reload();
+  await app(() => window.__app.setCamera({ position: [4.2, 3.2, 4.4], target: [-1.3, 0.65, -1.2] }));
+  await page.waitForTimeout(200);
+
+  // All swatches resolve without the magenta-fallback warning.
+  const badIds = await app(() => {
+    const warnings = [];
+    const orig = console.warn;
+    console.warn = (msg) => warnings.push(String(msg));
+    // touch every swatch through the library
+    return import('/src/materials/swatches.js').then(async (m) => {
+      const lib = (await import('/src/materials/library.js')).materialLibrary;
+      for (const s of m.SWATCHES) lib.get(s.id);
+      console.warn = orig;
+      return warnings.filter((w) => w.includes('unknown material'));
+    });
+  });
+  check('materials: every swatch id resolves', badIds.length === 0, badIds.join(','));
+
+  // Wheel pages: open via quick-action, cycle to Finishes, commit a laminate.
+  await app(() => window.__app.select('island-1'));
+  await page.waitForSelector('.quick-actions:not(.hidden)', { timeout: 6000 });
+  await page.locator('.qa-btn[title="Materials"]').click({ force: true });
+  await page.waitForTimeout(250);
+  check('wheel: opens on Classic', (await page.locator('.wheel-pagelabel').textContent()).includes('Classic'));
+  await page.locator('.wheel-disc').click({ force: true });
+  await page.waitForTimeout(150);
+  check('wheel: disc click cycles to Finishes', (await page.locator('.wheel-pagelabel').textContent()).includes('Finishes'));
+  const seg = page.locator('.wheel [data-page="finishes"] .wheel-seg[data-swatch="acr_navy"]');
+  await seg.hover();
+  await page.waitForTimeout(100);
+  await seg.click({ force: true });
+  await page.waitForTimeout(250);
+  const door = await app(() => window.__app.store.get().items.find((i) => i.id === 'island-1').materials.door);
+  check('wheel: finish commit writes the door material', door === 'acr_navy', door);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(250);
+  const doorUndo = await app(() => window.__app.store.get().items.find((i) => i.id === 'island-1').materials.door);
+  check('wheel: undo reverts the finish', doorUndo !== 'acr_navy', doorUndo);
+
+  // Under-cabinet LED strip meshes appear/disappear with the toggle.
+  await app(() => window.__app.actions.setUnitParam('wall-run', 'underLight', true));
+  await page.waitForTimeout(250);
+  const nOn = await app(() => window.__app.countRole('wall-run', 'ledStrip'));
+  await app(() => window.__app.actions.setUnitParam('wall-run', 'underLight', false));
+  await page.waitForTimeout(250);
+  const nOff = await app(() => window.__app.countRole('wall-run', 'ledStrip'));
+  check('led: underLight adds/removes the strip', nOn === 1 && nOff === 0, `${nOn}/${nOff}`);
+
+  // Lights button cycles three states and returns to day. Normalize first:
+  // earlier blocks may have left the state anywhere in the cycle.
+  for (let i = 0; i < 3; i += 1) {
+    const label = await page.locator('.toolbar .tb-item[data-tool="lights"] .tb-label').textContent();
+    if (label === 'Lights') break;
+    await tb('lights').click();
+    await page.waitForTimeout(100);
+  }
+  const labels = [];
+  for (let i = 0; i < 3; i += 1) {
+    await tb('lights').click();
+    await page.waitForTimeout(120);
+    labels.push(await page.locator('.toolbar .tb-item[data-tool="lights"] .tb-label').textContent());
+  }
+  check('lights: cycles Evening -> Night -> Lights(day)', labels.join(',') === 'Evening,Night,Lights', labels.join(','));
 });
 
 // ---------------------------------------------------------------- SUMMARY
