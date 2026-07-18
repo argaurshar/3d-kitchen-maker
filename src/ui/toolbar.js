@@ -15,6 +15,8 @@ const ICONS = {
   snap: svg('<path d="M3 2h3.5v6a1.5 1.5 0 0 0 3 0V2H13v6a5 5 0 0 1-10 0zm0 0v3h3.5M9.5 2v3H13" fill="none" stroke="currentColor" stroke-width="1.6"/>'),
   solid: svg('<path d="M8 1 14 4.2v7.6L8 15 2 11.8V4.2zM3.5 5.6v5.3L7.2 13V7.5zm9 0L8.8 7.5V13l3.7-2.1z"/>'),
   chevron: svg('<path d="M5 3l5 5-5 5-1-1 4-4-4-4z"/>'),
+  quote:
+    '<svg viewBox="0 0 16 16" width="16" height="16"><text x="8" y="12.5" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">₹</text></svg>',
 };
 
 const MAIN_ITEMS = [
@@ -22,6 +24,7 @@ const MAIN_ITEMS = [
   { id: 'paint', label: 'Paint', kind: 'tool' },
   { id: 'delete', label: 'Delete', kind: 'tool' },
   { id: 'share', label: 'Share', kind: 'action' },
+  { id: 'quote', label: 'Quote', kind: 'action' },
   { id: 'build', label: 'Build', kind: 'action' },
   { id: 'furnish', label: 'Furnish', kind: 'menu' },
   { id: 'lights', label: 'Lights', kind: 'toggle' },
@@ -89,6 +92,8 @@ export function createToolbar(handlers) {
         handlers.onLights?.(state.lights);
       } else if (item.id === 'share') {
         handlers.onShare?.();
+      } else if (item.id === 'quote') {
+        handlers.onQuote?.();
       } else if (item.id === 'build') {
         handlers.onBuild?.();
       }

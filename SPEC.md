@@ -108,6 +108,14 @@ Updated whenever a feature lands (see CLAUDE.md).
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P22 — Quotation & proposal**: pure quote engine over the scene JSON
+      (`src/state/quote.js` + `src/state/pricing.js` editable rate card with
+      overrides in `scene.quote`) — per-unit line items by running-ft, finish-tier
+      × hardware-tier multipliers, shutter-system adders, GST + discount; live
+      re-pricing panel with rate editing from the toolbar ₹ button
+      (`src/ui/quotePanel.js`); print-ready client proposal (cover, 3D hero, CAD
+      sheet, per-wall spec, itemized quote) via `src/ui/proposal.js`; frozen-total
+      regression guard in the smoke suite
 - [x] **P21 — Materials & lighting**: 31 new finish swatches across laminate /
       acrylic / PU / membrane / veneer / super-matt / lacquered-glass families
       (`src/materials/swatchesFinishes.js`); paged material wheel (center disc

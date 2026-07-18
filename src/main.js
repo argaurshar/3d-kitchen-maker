@@ -19,6 +19,8 @@ import { createRoomPanel } from './ui/roomPanel.js';
 import { createQuickActions } from './ui/quickActions.js';
 import { createCatalog } from './ui/catalog.js';
 import { createHelpOverlay } from './ui/helpOverlay.js';
+import { createQuotePanel } from './ui/quotePanel.js';
+import { openProposal } from './ui/proposal.js';
 import { updateTweens } from './core/tween.js';
 import { installDebugApi } from './core/debug.js';
 import { initPanel } from './ui/panel.js';
@@ -94,6 +96,30 @@ function shareScene() {
 const roomPanel = createRoomPanel();
 const helpOverlay = createHelpOverlay();
 
+// Proposal assets are captured synchronously inside the click handler so
+// window.open stays popup-blocker-safe (toDataURL + buildSheetSvg are sync).
+function captureProposal() {
+  picker.select(null);
+  const prevPosition = camera.position.clone();
+  const prevTarget = controls.target.clone();
+  applyCameraPreset(camera, controls, 'hero');
+  projection.update(camera);
+  renderer.render(scene, camera);
+  const hero = renderer.domElement.toDataURL('image/png');
+  camera.position.copy(prevPosition);
+  controls.target.copy(prevTarget);
+  controls.update();
+  const { svg } = buildSheetSvg({ renderer, scene, camera, controls, projection, sceneState: store.get() });
+  return { sceneState: store.get(), snapshots: { hero }, sheetSvg: svg };
+}
+
+const quotePanel = createQuotePanel({
+  onProposal: () => {
+    const how = openProposal(captureProposal(), download);
+    toast(how === 'popup' ? 'Proposal opened — print to PDF' : 'Popup blocked — proposal.html downloaded');
+  },
+});
+
 function beginPlace(kind) {
   picker.setTool('select');
   toolbar.setActive('select');
@@ -120,7 +146,14 @@ const toolbar = createToolbar({
   onSolid: (v) => projection.setClay(v),
   onLights: (name) => applyLightPreset(lights, name, scene),
   onShare: shareScene,
-  onBuild: () => roomPanel.toggle(),
+  onBuild: () => {
+    quotePanel.close(); // both dock left — one at a time
+    roomPanel.toggle();
+  },
+  onQuote: () => {
+    roomPanel.close();
+    quotePanel.toggle();
+  },
   onFurnish: () => catalog.toggle(),
   onFurnishClose: () => catalog.close(),
 });

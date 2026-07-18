@@ -92,5 +92,23 @@ check('setApplianceParam refuses bad width', actions.setApplianceParam('smoke-fr
 check('setApplianceParam refuses bad finish', actions.setApplianceParam('smoke-fridge', 'finish', 'gold'), false);
 actions.removeItem('smoke-fridge');
 
+// Quote engine: frozen expected totals for the reference kitchen guard the
+// pricing math against silent regressions. Update deliberately when rates
+// or the fixture change.
+{
+  const { computeQuote } = await import('../src/state/quote.js');
+  const { RATE_CARD } = await import('../src/state/pricing.js');
+  const { readFile } = await import('fs/promises');
+  const reference = JSON.parse(await readFile(new URL('../src/state/fixtures/reference-kitchen.json', import.meta.url), 'utf8'));
+  const result = computeQuote(reference, RATE_CARD);
+  const okQuote = result.lines.length === 12 && result.subtotal === 221843 && result.total === 261775;
+  console.log(`${okQuote ? 'ok  ' : 'FAIL'} computeQuote frozen totals (lines=${result.lines.length} subtotal=${result.subtotal} total=${result.total})`);
+  if (!okQuote) failures += 1;
+  const premium = computeQuote({ ...reference, quote: { hardwareTier: 'premium' } }, RATE_CARD);
+  const okTier = premium.total > result.total;
+  console.log(`${okTier ? 'ok  ' : 'FAIL'} premium tier prices higher (${premium.total})`);
+  if (!okTier) failures += 1;
+}
+
 console.log(failures === 0 ? '\nALL ACTIONS OK' : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

@@ -5,3 +5,4 @@ export * from './actions/modules.js';
 export * from './actions/items.js';
 export * from './actions/params.js';
 export * from './actions/room.js';
+export * from './actions/quote.js';

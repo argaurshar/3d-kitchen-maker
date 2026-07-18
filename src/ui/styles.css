@@ -763,3 +763,60 @@ body.walk-mode .toast {
   text-transform: uppercase;
   pointer-events: none;
 }
+
+/* ---------- Quote panel + proposal ---------- */
+.quote-panel {
+  position: fixed;
+  top: 56px;
+  left: 12px;
+  width: 300px;
+  max-height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  background: #26282cf8;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 11;
+  color: #e6e7e9;
+  overflow: hidden;
+}
+.quote-panel.hidden { display: none; }
+.quote-panel .panel-body { padding: 8px 12px 12px; overflow-y: auto; }
+.quote-lines { margin: 8px 0 4px; }
+.quote-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid #33363b;
+}
+.quote-line-label { font-size: 12.5px; font-weight: 600; }
+.quote-line-detail { font-size: 11px; color: #9aa0a6; }
+.quote-line-amt { font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 12.5px; }
+.quote-totals { margin: 8px 0; }
+.quote-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12.5px;
+  color: #c9ccd1;
+}
+.quote-total-row.strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  border-top: 1px solid #4a4e54;
+  margin-top: 4px;
+  padding-top: 6px;
+}
+.rate-input {
+  width: 86px;
+  background: #1b1d20;
+  border: 1px solid #3a3d42;
+  border-radius: 6px;
+  color: #e6e7e9;
+  padding: 4px 6px;
+  font-size: 12.5px;
+}
+.btn.primary { background: #8fa387; color: #1b1d20; font-weight: 600; }
+.btn.primary:hover { background: #a1b399; }

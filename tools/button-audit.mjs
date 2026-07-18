@@ -714,6 +714,57 @@ await guard('materials + led', async () => {
   check('lights: cycles Evening -> Night -> Lights(day)', labels.join(',') === 'Evening,Night,Lights', labels.join(','));
 });
 
+// ---------------------------------------------------------------- QUOTATION
+await guard('quotation', async () => {
+  await reload();
+  await tb('quote').click();
+  await page.waitForTimeout(300);
+  check('quote: toolbar button opens the panel', (await page.locator('.quote-panel:not(.hidden)').count()) > 0);
+
+  const lineCount = await page.locator('.quote-line').count();
+  check('quote: line items rendered for every element', lineCount === 12, `lines=${lineCount}`);
+  const totalText = await page.locator('.quote-total-row.strong span').nth(1).textContent();
+  check('quote: grand total is a rupee amount', /^₹[\d,]+$/.test(totalText), totalText);
+
+  // Premium tier re-prices live upward.
+  const parse = (t) => Number(t.replace(/[₹,]/g, ''));
+  const t0 = parse(totalText);
+  await page.locator('.quote-panel .seg-btn', { hasText: 'Premium' }).click();
+  await page.waitForTimeout(400);
+  const t1 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
+  check('quote: premium tier raises the total', t1 > t0, `${t0} -> ${t1}`);
+
+  // Discount lowers it.
+  await page.locator('.quote-panel .step-btn', { hasText: '+' }).nth(1).click();
+  await page.waitForTimeout(400);
+  const t2 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
+  check('quote: discount lowers the total', t2 < t1, `${t1} -> ${t2}`);
+
+  // Rate override re-prices.
+  const r = await app(() => window.__app.actions.setRateOverride('unitRates.base', 3000));
+  await page.waitForTimeout(400);
+  const t3 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
+  check('quote: rate override re-prices', r.ok && t3 > t2, `${t2} -> ${t3}`);
+
+  // Undo reverts the override.
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(500);
+  const t4 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
+  check('quote: undo reverts the pricing change', t4 === t2, `${t3} -> ${t4}`);
+
+  // Proposal popup: opens with the grand total and the inline CAD sheet.
+  const popupPromise = page.waitForEvent('popup', { timeout: 15000 });
+  await page.locator('.quote-panel .btn.primary').click();
+  const popup = await popupPromise;
+  await popup.waitForLoadState('domcontentloaded');
+  const html = await popup.content();
+  check('proposal: popup contains grand total and CAD sheet',
+    html.includes('Grand total') && html.includes('<svg') && html.includes('Quotation'),
+    `len=${html.length}`);
+  await popup.close();
+  await tb('quote').click(); // close panel
+});
+
 // ---------------------------------------------------------------- SUMMARY
 const failed = results.filter((r) => !r.passed);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
