@@ -3,6 +3,7 @@ import * as actions from '../state/actions.js';
 import { effectiveCompartments } from '../build/compartments.js';
 import { renderFridgePanel, renderHoodPanel, renderStoolPanel } from './panelAppliance.js';
 import { el, segmented, slider, stepper, toggle, listRow, button, section, iconButton, rafThrottle } from './controls.js';
+import { fmtLen, subscribeUnits } from '../state/units.js';
 
 const UNIT_LABELS = { base: 'Base unit', tall: 'Tall unit', wall: 'Wall unit', island: 'Island' };
 const APPLIANCE_LABELS = { fridge: 'Fridge', hood: 'Extractor hood', sink: 'Sink', hob: 'Hob', tap: 'Tap' };
@@ -26,7 +27,7 @@ const HANDLE_OPTIONS = [
   { value: 'hole', label: 'Hole' },
   { value: 'bar', label: 'Bar' },
 ];
-const cm = (m) => `${Math.round(m * 100)} cm`;
+const cm = (m) => fmtLen(m);
 
 let root = null;
 let view = null; // { itemId, moduleId? }
@@ -65,6 +66,7 @@ export function initPanel({ onClose } = {}) {
     if (rest.length === 1 && (rest[0] === 'position' || rest[0] === 'rotationY')) return;
     if (index === undefined || store.get().items[Number(index)]?.id === view.itemId) render();
   });
+  subscribeUnits(() => view && render());
   return { select };
 }
 
@@ -169,7 +171,7 @@ function renderRunPanel(body, item) {
     for (const feature of item.features) {
       const label = el('div', 'list-label');
       label.appendChild(el('span', 'list-label-main', APPLIANCE_LABELS[feature.type] ?? feature.type));
-      label.appendChild(el('span', 'list-label-sub', `${Math.round(feature.offsetX * 100)} cm`));
+      label.appendChild(el('span', 'list-label-sub', fmtLen(feature.offsetX)));
       featureBody.appendChild(
         listRow(label, { onDelete: () => run(actions.removeFeature(item.id, feature.id)) })
       );
@@ -192,7 +194,7 @@ function renderModulePanel(body, item, module) {
   const isFiller = module.type === 'filler';
   const applyWidth = rafThrottle((v) => withLive(() => actions.setModuleParam(item.id, module.id, 'width', v / 100)));
   body.appendChild(
-    slider('Width', isFiller ? 6 : 30, isFiller ? 30 : 120, 2, Math.round(module.width * 100), (v) => `${v} cm`, (v, live) => {
+    slider('Width', isFiller ? 6 : 30, isFiller ? 30 : 120, 2, Math.round(module.width * 100), (v) => fmtLen(v / 100), (v, live) => {
       if (live) applyWidth(v);
       else run(actions.setModuleParam(item.id, module.id, 'width', v / 100));
     })

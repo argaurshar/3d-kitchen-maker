@@ -100,7 +100,7 @@ export function createToolbar(handlers) {
       } else if (item.id === 'share') {
         handlers.onShare?.();
       } else if (item.id === 'build') {
-        toast('Build tools arrive with room editing');
+        handlers.onBuild?.();
       }
     });
     bar.appendChild(btn);

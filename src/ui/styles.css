@@ -471,6 +471,22 @@ input[type='range'] {
 }
 .file-entry:hover { background: #4a545e; }
 
+/* ---------- Room panel (Build button) ---------- */
+.room-panel {
+  position: fixed;
+  top: 56px;
+  left: 12px;
+  width: 264px;
+  background: #26282cf8;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 11;
+  color: #e6e7e9;
+  overflow: hidden;
+}
+.room-panel.hidden { display: none; }
+.room-panel .panel-body { padding: 10px 12px 12px; }
+
 /* ---------- Elevations planner ---------- */
 .elev-launch {
   position: fixed;

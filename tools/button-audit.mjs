@@ -90,10 +90,11 @@ await tb('lights').click();
 check('toolbar: Lights toggles back to day', !(await tb('lights').getAttribute('class')).includes('on'));
 
 await tb('build').click();
-check('toolbar: Build does something visible',
-  (await page.locator('.furnish-row').count()) > 0 &&
-  (!(await page.locator('.furnish-row').getAttribute('class')).includes('hidden') ||
-   (await page.locator('.toast').count()) > 0));
+await page.waitForTimeout(120);
+check('toolbar: Build opens the room panel',
+  (await page.locator('.room-panel:not(.hidden)').count()) > 0);
+await tb('build').click(); // close again so later blocks start from a known state
+await page.waitForTimeout(80);
 
 // Share downloads
 let downloads = 0;
@@ -377,6 +378,95 @@ await guard('export drawings', async () => {
   check('elevations: Export SVG downloads a drawing',
     svgFile.suggestedFilename() === 'kitchen-elevations.svg', svgFile.suggestedFilename());
   await svgFile.saveAs('/tmp/claude-0/-home-user-3d-kitchen-maker/0ce1beff-85ed-5149-9d51-ad4ad392f7a6/scratchpad/kitchen-elevations.svg').catch(() => {});
+});
+
+// ---------------------------------------------------------------- ROOM PANEL + UNITS
+await guard('room panel', async () => {
+  await reload();
+  // The Build button toggles; converge on open regardless of prior state.
+  if ((await page.locator('.room-panel:not(.hidden)').count()) === 0) {
+    await tb('build').click();
+    await page.waitForTimeout(150);
+  }
+  check('build: opens room panel', (await page.locator('.room-panel:not(.hidden)').count()) > 0);
+
+  const before = await app(() => window.__app.store.get().room.width);
+  const bb = await page.locator('.room-panel input[type=range]').first().boundingBox();
+  await page.mouse.move(bb.x + bb.width * 0.5, bb.y + bb.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bb.x + bb.width * 0.8, bb.y + bb.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+  const after = await app(() => window.__app.store.get().room.width);
+  check('room: width slider writes the store', after !== before, `${before} -> ${after}`);
+  check('room: out-of-range width rejected',
+    (await app(() => window.__app.actions.setRoomParam('width', 20).ok)) === false);
+
+  // Units toggle relabels the panel.
+  await page.locator('.room-panel .seg-btn', { hasText: 'ft-in' }).click();
+  await page.waitForTimeout(150);
+  const label = await page.locator('.room-panel .readout').first().textContent();
+  check('units: ft-in toggle relabels sliders', /['"]/.test(label), label);
+  await page.locator('.room-panel .seg-btn', { hasText: 'mm' }).click();
+  await page.waitForTimeout(100);
+  const labelMm = await page.locator('.room-panel .readout').first().textContent();
+  check('units: mm toggle restores mm labels', /mm/.test(labelMm), labelMm);
+  await tb('build').click(); // close
+});
+
+// ---------------------------------------------------------------- UNDO / REDO
+await guard('undo-redo', async () => {
+  await reload();
+  await app(() => window.__app.select('base-run'));
+  await page.waitForTimeout(400); // let history settle a baseline
+  const n0 = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules.length);
+  await page.locator('.panel-body .btn', { hasText: 'Add module' }).click();
+  await page.waitForTimeout(500); // capture debounce
+  const n1 = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules.length);
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(200);
+  const nUndo = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules.length);
+  check('undo: Ctrl+Z reverts Add module', n1 === n0 + 1 && nUndo === n0, `${n0}->${n1}->${nUndo}`);
+  await page.keyboard.press('Control+y');
+  await page.waitForTimeout(200);
+  const nRedo = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules.length);
+  check('redo: Ctrl+Y reapplies', nRedo === n1, `${nRedo}`);
+
+  // A slider drag coalesces into ONE undo step.
+  await app(() => window.__app.select('base-run'));
+  await page.waitForTimeout(400);
+  await page.locator('.panel-body .list-row-main.clickable').first().click();
+  await page.waitForTimeout(500);
+  const w0 = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules[0].width);
+  const sb = await page.locator('.panel-body input[type=range]').first().boundingBox();
+  await page.mouse.move(sb.x + sb.width * 0.4, sb.y + sb.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(sb.x + sb.width * 0.9, sb.y + sb.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  const w1 = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules[0].width);
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(200);
+  const wUndo = await app(() => window.__app.store.get().items.find((i) => i.id === 'base-run').modules[0].width);
+  check('undo: slider drag coalesces to one step', w1 !== w0 && Math.abs(wUndo - w0) < 1e-9, `${w0}->${w1}->${wUndo}`);
+});
+
+// ---------------------------------------------------------------- NUDGE + ROTATE
+await guard('nudge-rotate', async () => {
+  await reload();
+  await app(() => window.__app.select('stool-1'));
+  await page.waitForTimeout(150);
+  const p0 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-1').position.join(','));
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(150);
+  const p1 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-1').position.join(','));
+  check('nudge: ArrowRight moves selected item', p0 !== p1, `${p0} -> ${p1}`);
+  const r0 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-1').rotationY ?? 0);
+  const rot = await app(() => window.__app.actions.rotateItem('stool-1', Math.PI / 2));
+  const r1 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-1').rotationY ?? 0);
+  check('rotate: rotateItem adds 90°', rot.ok && Math.abs(r1 - r0 - Math.PI / 2) < 1e-9);
+  const dup = await app(() => window.__app.actions.duplicateItem('stool-1'));
+  check('duplicate: duplicateItem returns new id', dup.ok && typeof dup.id === 'string');
 });
 
 // ---------------------------------------------------------------- SUMMARY

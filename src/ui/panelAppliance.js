@@ -3,6 +3,7 @@ import { FRIDGE_DEFAULTS, FRIDGE_FINISHES } from '../build/appliances/fridge.js'
 import { stoolParams } from '../build/furniture/stool.js';
 import { SWATCHES } from '../materials/swatches.js';
 import { el, segmented, slider, toggle, rafThrottle } from './controls.js';
+import { fmtLen } from '../state/units.js';
 
 const TYPE_OPTIONS = [
   { value: 'topFreezer', label: 'Top freezer' },
@@ -52,7 +53,7 @@ export function renderFridgePanel(body, item, helpers) {
   );
 
   const dims = addSection(body, 'fridge-dims', 'Dimensions');
-  const meters = (v) => `${v.toFixed(2)} m`;
+  const meters = (v) => fmtLen(v);
   for (const [key, label, min, max] of [
     ['width', 'Width', 0.6, 1.2],
     ['height', 'Height', 1.4, 2.1],
@@ -87,11 +88,10 @@ export function renderStoolPanel(body, item, helpers) {
   const { addSection, run, withLive } = helpers;
   const p = stoolParams(item);
   const set = (key, value) => run(setFurnitureParam(item.id, key, value));
-  const cm = (v) => `${Math.round(v * 100)} cm`;
   const liveSlider = (parent, key, label, min, max) => {
     const live = rafThrottle((v) => withLive(() => setFurnitureParam(item.id, key, v / 100)));
     parent.appendChild(
-      slider(label, min, max, 1, Math.round(p[key] * 100), (v) => `${v} cm`, (v, isLive) => {
+      slider(label, min, max, 1, Math.round(p[key] * 100), (v) => fmtLen(v / 100), (v, isLive) => {
         if (isLive) live(v);
         else set(key, v / 100);
       })

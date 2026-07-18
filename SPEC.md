@@ -108,6 +108,11 @@ Updated whenever a feature lands (see CLAUDE.md).
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P18 — Foundations**: actions split under `src/state/actions/` (barrel kept);
+      undo/redo (`src/state/history.js`, Ctrl+Z/Y, gesture-coalescing snapshots);
+      display units mm/ft-in (`src/state/units.js`); room width/depth/height editing
+      via the Build button (`src/ui/roomPanel.js`); arrow-key nudge + rotateItem +
+      duplicateItem (`src/ui/shortcuts.js`)
 - [x] **P17 — Suggestions & drawings**: missing-element detection with one-click add
       (`suggestMissing` in `src/state/elements.js`) and a drawing-sheet export where
       the plan and all four elevations are true 2D CAD line drawings generated from

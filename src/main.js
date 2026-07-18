@@ -13,6 +13,9 @@ import { createElevations } from './ui/elevations.js';
 import { buildSheetSvg, rasterizeSvg } from './core/drawings.js';
 import { createStats } from './ui/stats.js';
 import { initPersistence } from './state/persist.js';
+import { initHistory, undo, redo, historyDepth } from './state/history.js';
+import { initShortcuts } from './ui/shortcuts.js';
+import { createRoomPanel } from './ui/roomPanel.js';
 import { updateTweens } from './core/tween.js';
 import { installDebugApi } from './core/debug.js';
 import { initPanel } from './ui/panel.js';
@@ -85,6 +88,8 @@ function shareScene() {
   controls.update();
 }
 
+const roomPanel = createRoomPanel();
+
 const toolbar = createToolbar({
   onTool: (t) => picker.setTool(t),
   onPlace: (kind) => {
@@ -96,7 +101,11 @@ const toolbar = createToolbar({
   onSolid: (v) => projection.setClay(v),
   onLights: (name) => applyLightPreset(lights, name),
   onShare: shareScene,
+  onBuild: () => roomPanel.toggle(),
 });
+
+initHistory({ isDragging: () => picker.isDragging() });
+initShortcuts({ picker });
 
 // Shared by "add to this wall" and the missing-element suggestions: reset to
 // an editable 3D view and start ghost placement of the requested element.
@@ -195,7 +204,8 @@ onResize();
 let resolveReady;
 const ready = new Promise((resolve) => (resolveReady = resolve));
 installDebugApi({ camera, controls, renderer, ready, openDoors, picker, projection });
-// Elevations planner hooks for the interaction audit.
+// History + elevations hooks for the interaction audit.
+window.__app.history = { undo, redo, depth: historyDepth };
 window.__app.setElevation = (dir) => elevations.setView(dir);
 window.__app.elevationCounts = () => elevations.counts();
 window.__app.getSuggestions = () => elevations.suggestions();
