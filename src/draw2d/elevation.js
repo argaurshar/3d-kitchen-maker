@@ -5,7 +5,7 @@ import { wallOf } from '../state/elements.js';
 import { FRIDGE_DEFAULTS } from '../build/appliances/fridge.js';
 import { HOOD_DEFAULTS, HOOD_DIMS } from '../build/appliances/hood.js';
 import { drawFront } from './fronts2d.js';
-import { L, R, T, dim, meters, cmLabel } from './svg.js';
+import { L, R, T, dim, fmtDim, tagBubble } from './svg.js';
 
 // True front-orthographic CAD elevation of one wall, drawn from the scene
 // JSON: wall face and floor line, every run's plinth / module fronts /
@@ -15,7 +15,9 @@ import { L, R, T, dim, meters, cmLabel } from './svg.js';
 // horizontal axis matches the 3D elevation views.
 const M = 56;
 
-export function elevationGroup(scene, wall, cw, ch) {
+export function elevationGroup(scene, wall, cw, ch, opts = {}) {
+  const { unit = 'mm', tags = null } = opts;
+  const fmt = (v) => fmtDim(v, unit);
   const { width: W, depth: D, wallHeight: H } = scene.room;
   const span = wall === 'north' || wall === 'south' ? W : D;
   // The dimension rows (module chain + overall per run + wall span) live in
@@ -42,15 +44,16 @@ export function elevationGroup(scene, wall, cw, ch) {
   const items = (scene.items ?? []).filter((i) => wallOf(i) === wall);
   const runs = items.filter((i) => i.kind === 'run');
 
-  runs.forEach((run, index) => drawRun(out, run, index, { U, V, uAt, s, floorY }));
+  const ctxDraw = { U, V, uAt, s, floorY, fmt, tags };
+  runs.forEach((run, index) => drawRun(out, run, index, ctxDraw));
   for (const a of items.filter((i) => i.kind === 'appliance')) {
-    if (a.applianceType === 'fridge') drawFridge(out, a, { U, V, uAt, s });
-    if (a.applianceType === 'hood') drawHood(out, a, { U, V, uAt, s, H });
+    if (a.applianceType === 'fridge') drawFridge(out, a, ctxDraw);
+    if (a.applianceType === 'hood') drawHood(out, a, { ...ctxDraw, H });
   }
 
   // Wall span at the lowest dimension row; height marker outside the wall.
   const spanRow = floorY + 16 + runs.length * 30 + 6;
-  out.push(dim(U(0), spanRow, U(span), spanRow, meters(span)));
+  out.push(dim(U(0), spanRow, U(span), spanRow, fmt(span)));
   const height = runs.some((r) => (r.unitType ?? 'base') === 'base')
     ? DIMS.plinthHeight + DIMS.baseHeight + DIMS.worktopThickness
     : runs.some((r) => r.unitType === 'tall')
@@ -58,11 +61,11 @@ export function elevationGroup(scene, wall, cw, ch) {
       : runs.some((r) => r.unitType === 'wall')
         ? DIMS.wallUnitMount + DIMS.wallUnitHeight
         : H;
-  out.push(dim(U(0) - 18, floorY, U(0) - 18, V(height), meters(height)));
+  out.push(dim(U(0) - 18, floorY, U(0) - 18, V(height), fmt(height)));
   return out.join('');
 }
 
-function drawRun(out, run, index, { U, V, uAt, s, floorY }) {
+function drawRun(out, run, index, { U, V, uAt, s, floorY, fmt, tags }) {
   const ctx = unitContext(run);
   const widths = (run.modules ?? []).map((m) => m.width);
   const rw = widths.reduce((a, b) => a + b, 0);
@@ -87,6 +90,19 @@ function drawRun(out, run, index, { U, V, uAt, s, floorY }) {
   if (wantsTop) {
     out.push(R(U(left) - 2, V(topY + DIMS.worktopThickness), rw * s + 4, DIMS.worktopThickness * s, 'box'));
   }
+  // Under-cabinet LED: dashed strip + downward light ticks below the unit.
+  if (run.underLight && ctx.unitType === 'wall') {
+    const y = V(ctx.yBase) + 3;
+    out.push(L(U(left) + 3, y, U(left) + rw * s - 3, y, 'swing'));
+    for (let k = 1; k <= 4; k += 1) {
+      const x = U(left) + (rw * s * k) / 5;
+      out.push(L(x, y + 2, x, y + 9, 'swing'));
+    }
+  }
+  // Reference tag above the unit.
+  if (tags?.get(run.id)) {
+    out.push(tagBubble(U(left) + (rw * s) / 2, V(topY + (ctx.unitType === 'base' ? DIMS.worktopThickness : 0)) - 16, tags.get(run.id)));
+  }
 
   let cum = 0;
   for (const module of run.modules ?? []) {
@@ -110,19 +126,19 @@ function drawRun(out, run, index, { U, V, uAt, s, floorY }) {
     cum += module.width;
   }
 
-  // Dimensions: per-module cm chain, overall meters below it.
+  // Dimensions: per-module chain, overall length below it (display unit).
   const base = floorY + 16 + index * 30;
   if (widths.length > 1) {
     let acc = 0;
     for (const w of widths) {
       const a = U(uAt(run, acc));
       const b = U(uAt(run, acc + w));
-      out.push(dim(Math.min(a, b), base, Math.max(a, b), base, cmLabel(w), { optional: true }));
+      out.push(dim(Math.min(a, b), base, Math.max(a, b), base, fmt(w), { optional: true }));
       acc += w;
     }
   }
   const overall = base + (widths.length > 1 ? 13 : 0);
-  out.push(dim(U(left), overall, U(left) + rw * s, overall, meters(rw)));
+  out.push(dim(U(left), overall, U(left) + rw * s, overall, fmt(rw)));
 }
 
 const FRIDGE_SPLITS = {
@@ -135,7 +151,7 @@ const FRIDGE_SPLITS = {
   bottomFreezer: (x, y, w, h) => [L(x, y + h * 0.68, x + w, y + h * 0.68, 'ln')],
 };
 
-function drawFridge(out, item, { U, V, uAt, s }) {
+function drawFridge(out, item, { U, V, uAt, s, tags }) {
   const p = { ...FRIDGE_DEFAULTS, ...item.params };
   const a = U(uAt(item, 0));
   const b = U(uAt(item, p.width));
@@ -146,6 +162,7 @@ function drawFridge(out, item, { U, V, uAt, s }) {
   out.push(R(x, y, w, h, 'appl'));
   out.push(...(FRIDGE_SPLITS[p.type] ?? FRIDGE_SPLITS.sideBySide)(x, y, w, h));
   out.push(T(x + w / 2, y + h / 2 + 3, 'REF', 'dimtxt', 'middle'));
+  if (tags?.get(item.id)) out.push(tagBubble(x + w / 2, y - 14, tags.get(item.id)));
 }
 
 function drawHood(out, item, { U, V, uAt, s, H }) {

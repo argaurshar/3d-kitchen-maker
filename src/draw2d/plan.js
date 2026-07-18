@@ -4,7 +4,7 @@ import { HOB_SIZE } from '../build/appliances/hob.js';
 import { SINK_SIZE } from '../build/appliances/sink.js';
 import { FRIDGE_DEFAULTS } from '../build/appliances/fridge.js';
 import { HOOD_DIMS, HOOD_DEFAULTS } from '../build/appliances/hood.js';
-import { L, R, C, T, dim, meters } from './svg.js';
+import { L, R, C, T, dim, fmtDim, tagBubble } from './svg.js';
 
 // True top-down CAD floor plan drawn from the scene JSON. Architectural
 // conventions: walls as a filled cut, base units solid with the worktop
@@ -14,7 +14,9 @@ import { L, R, C, T, dim, meters } from './svg.js';
 // a scale bar and a north arrow.
 const WALL_T = 0.1;
 
-export function planGroup(scene, cw, ch) {
+export function planGroup(scene, cw, ch, opts = {}) {
+  const { unit = 'mm', tags = null } = opts;
+  const fmt = (v) => fmtDim(v, unit);
   const { width: W, depth: D } = scene.room;
   const M = 52;
   const s = Math.min((cw - 2 * M) / (W + 2 * WALL_T), (ch - 2 * M) / (D + 2 * WALL_T));
@@ -33,11 +35,12 @@ export function planGroup(scene, cw, ch) {
     out.push(
       `<g transform="translate(${X(item.position[0]).toFixed(1)},${Y(item.position[1]).toFixed(1)}) rotate(${deg.toFixed(1)})">${g}</g>`
     );
+    if (tags?.get(item.id)) out.push(tagBubble(X(item.position[0]), Y(item.position[1]), tags.get(item.id)));
   }
 
   // Room dimensions outside the walls, scale bar, north arrow.
-  out.push(dim(X(-W / 2), Y(D / 2 + WALL_T) + 16, X(W / 2), Y(D / 2 + WALL_T) + 16, meters(W)));
-  out.push(dim(X(-W / 2 - WALL_T) - 16, Y(-D / 2), X(-W / 2 - WALL_T) - 16, Y(D / 2), meters(D)));
+  out.push(dim(X(-W / 2), Y(D / 2 + WALL_T) + 16, X(W / 2), Y(D / 2 + WALL_T) + 16, fmt(W)));
+  out.push(dim(X(-W / 2 - WALL_T) - 16, Y(-D / 2), X(-W / 2 - WALL_T) - 16, Y(D / 2), fmt(D)));
   out.push(dim(M, ch - 14, M + s, ch - 14, '1 m'));
   const nx = cw - 26;
   out.push(C(nx, 26, 11, 'ln'), L(nx, 33, nx, 19, 'ln'), L(nx, 19, nx - 3.5, 25, 'ln'), L(nx, 19, nx + 3.5, 25, 'ln'));
@@ -95,8 +98,13 @@ function runPlan(item, s) {
     if (unit === 'tall') out.push(L(x, 0, x + w * s, front, 'thin'), L(x, front, x + w * s, 0, 'thin'));
     cum += w;
   }
-  // Door-face line emphasised on floor-standing units.
+  // Door-face line emphasised on floor-standing units; LED marker on wall
+  // runs (dashed light line just outside the front edge).
   if (!isWall) out.push(L(0, front, rw * s, front, 'ln'));
+  if (isWall && item.underLight) {
+    out.push(L(2, front + 3, rw * s - 2, front + 3, 'swing'));
+    out.push(T(rw * s + 4, front + 5, 'LED', 'dimtxt'));
+  }
 
   // Worktop feature symbols at their real offsets.
   for (const f of item.features ?? []) {

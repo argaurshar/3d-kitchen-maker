@@ -35,6 +35,10 @@ const TABS = [
 ];
 
 const PRESET_LABELS = {
+  'preset-straight': 'Straight — membrane + lift-ups',
+  'preset-l-shape': 'L-shape — acrylic navy + gold profile',
+  'preset-u-shape': 'U-shape — laminate + bi-folds',
+  'preset-island-led': 'Island — graphite + LED night',
   'reference-kitchen': 'Showroom L-kitchen',
   galley: 'Galley starter',
   'single-cabinet': 'Single cabinet',

@@ -1,0 +1,48 @@
+{
+  "room": { "width": 4.2, "depth": 3.4, "wallHeight": 2.6, "wallColor": "paint_cotton", "floorMaterial": "tile_light" },
+  "quote": { "hardwareTier": "standard", "gstPct": 18, "discountPct": 0, "rateOverrides": {} },
+  "items": [
+    {
+      "id": "st-base", "kind": "run", "unitType": "base",
+      "position": [-2.1, -1.7], "rotationY": 0,
+      "worktop": true, "plinth": true, "backsplash": true,
+      "materials": { "door": "mem_cashmere", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_steel" },
+      "modules": [
+        { "id": "st-m1", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "st-m2", "type": "drawerBase", "width": 0.6, "handle": "jProfile" },
+        { "id": "st-m3", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "st-m4", "type": "cabinet", "width": 0.6, "handle": "jProfile",
+          "compartments": [ { "id": "st-m4c1", "type": "oven" }, { "id": "st-m4c2", "type": "drawer", "weight": 1 } ] },
+        { "id": "st-m5", "type": "cabinet", "width": 0.6, "handle": "jProfile" }
+      ],
+      "features": [
+        { "id": "st-sink", "type": "sink", "offsetX": 0.9, "params": {} },
+        { "id": "st-tap", "type": "tap", "offsetX": 0.9, "params": {} },
+        { "id": "st-hob", "type": "hob", "offsetX": 2.3, "params": { "burners": 4 } }
+      ]
+    },
+    {
+      "id": "st-wall", "kind": "run", "unitType": "wall",
+      "position": [-2.1, -1.7], "rotationY": 0,
+      "worktop": false, "plinth": false, "underLight": true,
+      "materials": { "door": "mem_cashmere", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_steel" },
+      "modules": [
+        { "id": "st-w1", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "st-w1c1", "type": "door", "style": { "hinge": "L", "front": "liftUp" }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "st-w2", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "st-w2c1", "type": "door", "style": { "hinge": "L", "front": "liftUp" }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "st-w3", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "st-w3c1", "type": "door", "style": { "hinge": "L", "front": "liftUp", "profile": { "frame": "silver", "glass": "frosted" } }, "shelvesInside": 1, "weight": 1 } ] }
+      ]
+    },
+    {
+      "id": "st-fridge", "kind": "appliance", "applianceType": "fridge",
+      "position": [1.05, -1.7], "rotationY": 0,
+      "params": { "type": "bottomFreezer", "finish": "stainless", "width": 0.85, "height": 1.85 }
+    },
+    {
+      "id": "st-hood", "kind": "appliance", "applianceType": "hood",
+      "position": [-0.1, -1.7], "rotationY": 0, "params": { "width": 0.6 }
+    }
+  ]
+}

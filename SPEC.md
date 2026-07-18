@@ -107,7 +107,19 @@ Updated whenever a feature lands (see CLAUDE.md).
       + Plan + 3D) with live element detection per wall and add-to-wall placement
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
-      control in the real DOM and asserts each produced its expected effect (52 checks)
+      control in the real DOM and asserts each produced its expected effect (109 checks)
+- [x] **P23 — Drawings polish & preset library**: deterministic reference tags on
+      the plan and all four elevations (B/W/T/I/F/H/S, numbered left-to-right per
+      wall) with a legend band on the sheet (`src/draw2d/tags.js`); dimensions
+      switch mm ↔ ft-in from the display-unit toggle (passed through `opts`, draw2d
+      stays pure); under-cabinet LED symbols on the plan (dashed strip + `LED`
+      label) and elevations; four complete themed preset kitchens exercising the
+      new systems — `preset-straight` (membrane + J-profile + lift-ups + LED),
+      `preset-l-shape` (acrylic navy + gold glass-profile display, premium tier),
+      `preset-u-shape` (laminate + bi-folds + fluted lift-up + blind corner),
+      `preset-island-led` (super-matt graphite + island shutter faces + all-lit
+      black-frosted profiles + LED, luxury tier), listed under the catalog Presets
+      tab and auto-registered via `import.meta.glob`
 - [x] **P22 — Quotation & proposal**: pure quote engine over the scene JSON
       (`src/state/quote.js` + `src/state/pricing.js` editable rate card with
       overrides in `scene.quote`) — per-unit line items by running-ft, finish-tier

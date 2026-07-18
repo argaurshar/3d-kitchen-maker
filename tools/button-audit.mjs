@@ -746,9 +746,21 @@ await guard('quotation', async () => {
   const t3 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
   check('quote: rate override re-prices', r.ok && t3 > t2, `${t2} -> ${t3}`);
 
-  // Undo reverts the override.
+  // Undo reverts the override. The panel re-renders on store.replace behind a
+  // 200ms debounce, so poll for the reverted total instead of a fixed wait —
+  // otherwise a busy full-audit run races the debounce and reads a stale DOM.
   await page.keyboard.press('Control+z');
-  await page.waitForTimeout(500);
+  await page
+    .waitForFunction(
+      (expected) => {
+        const spans = document.querySelectorAll('.quote-total-row.strong span');
+        if (spans.length < 2) return false;
+        return Number(spans[1].textContent.replace(/[₹,]/g, '')) === expected;
+      },
+      t2,
+      { timeout: 4000 },
+    )
+    .catch(() => {});
   const t4 = parse(await page.locator('.quote-total-row.strong span').nth(1).textContent());
   check('quote: undo reverts the pricing change', t4 === t2, `${t3} -> ${t4}`);
 
@@ -764,6 +776,50 @@ await guard('quotation', async () => {
   await popup.close();
   await tb('quote').click(); // close panel
 });
+
+// ---------------------------------------------------------------- DRAWINGS + PRESETS
+await guard('drawings polish', async () => {
+  await reload();
+  await app(() => window.__app.actions.setUnitParam('wall-run', 'underLight', true));
+  await page.waitForTimeout(200);
+  await ensureElevationsOpen();
+  const dl1 = page.waitForEvent('download', { timeout: 15000 });
+  await page.locator('.elev-export-svg').click();
+  const f1 = await dl1;
+  const p1 = '/tmp/claude-0/-home-user-3d-kitchen-maker/0ce1beff-85ed-5149-9d51-ad4ad392f7a6/scratchpad/sheet-mm.svg';
+  await f1.saveAs(p1);
+  const svgMm = await import('fs/promises').then((fs) => fs.readFile(p1, 'utf8'));
+  check('drawings: sheet carries reference tags', svgMm.includes('>B1<') && svgMm.includes('>W1<'));
+  check('drawings: legend band present', svgMm.includes('LEGEND'));
+  check('drawings: mm dimension labels', svgMm.includes('>3000<') && svgMm.includes('>6000<'));
+  check('drawings: LED symbol on the plan', svgMm.includes('>LED<'));
+
+  // ft-in re-export.
+  await tb('build').click();
+  await page.locator('.room-panel .seg-btn', { hasText: 'ft-in' }).click();
+  await page.waitForTimeout(150);
+  await tb('build').click();
+  const dl2 = page.waitForEvent('download', { timeout: 15000 });
+  await page.locator('.elev-export-svg').click();
+  const f2 = await dl2;
+  const p2 = '/tmp/claude-0/-home-user-3d-kitchen-maker/0ce1beff-85ed-5149-9d51-ad4ad392f7a6/scratchpad/sheet-ftin.svg';
+  await f2.saveAs(p2);
+  const svgFt = await import('fs/promises').then((fs) => fs.readFile(p2, 'utf8'));
+  check('drawings: ft-in dimension labels after toggle', /&gt;\d+'-\d+(\.\d+)?"&lt;|>\d+'-\d+(\.\d+)?"</.test(svgFt));
+  await tb('build').click();
+  await page.locator('.room-panel .seg-btn', { hasText: 'mm' }).click();
+  await page.waitForTimeout(100);
+  await tb('build').click();
+});
+
+for (const preset of ['preset-straight', 'preset-l-shape', 'preset-u-shape', 'preset-island-led']) {
+  await guard(`preset ${preset}`, async () => {
+    await app((n) => window.__app.loadFixture(n), preset);
+    await page.waitForTimeout(400);
+    const n = await app(() => window.__app.store.get().items.length);
+    check(`preset: ${preset} loads clean`, n > 3, `items=${n}`);
+  });
+}
 
 // ---------------------------------------------------------------- SUMMARY
 const failed = results.filter((r) => !r.passed);

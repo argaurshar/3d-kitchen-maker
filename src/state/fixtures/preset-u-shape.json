@@ -1,0 +1,70 @@
+{
+  "room": { "width": 5.6, "depth": 5.0, "wallHeight": 2.6, "wallColor": "paint_cream", "floorMaterial": "wood_parquet" },
+  "quote": { "hardwareTier": "standard", "gstPct": 18, "discountPct": 0, "rateOverrides": {} },
+  "items": [
+    {
+      "id": "us-north", "kind": "run", "unitType": "base",
+      "position": [-1.9, -2.5], "rotationY": 0,
+      "worktop": true, "plinth": true, "backsplash": true,
+      "materials": { "door": "lam_matt_sand", "carcass": "paint_white", "worktop": "wood_butcher", "handle": "metal_black" },
+      "modules": [
+        { "id": "us-n1", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-n2", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-n3", "type": "drawerBase", "width": 0.6, "handle": "bar" },
+        { "id": "us-n4", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-n5", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-n6", "type": "cabinet", "width": 0.6, "handle": "bar" }
+      ],
+      "features": [
+        { "id": "us-sink", "type": "sink", "offsetX": 1.0, "params": {} },
+        { "id": "us-tap", "type": "tap", "offsetX": 1.0, "params": {} },
+        { "id": "us-hob", "type": "hob", "offsetX": 2.7, "params": { "burners": 4 } }
+      ]
+    },
+    {
+      "id": "us-west", "kind": "run", "unitType": "base",
+      "position": [-2.8, 0.6], "rotationY": 1.5707963,
+      "worktop": true, "plinth": true,
+      "materials": { "door": "lam_matt_sand", "carcass": "paint_white", "worktop": "wood_butcher", "handle": "metal_black" },
+      "modules": [
+        { "id": "us-w1", "type": "blindCorner", "width": 0.9, "handle": "bar", "blindSide": "R" },
+        { "id": "us-w2", "type": "drawerBase", "width": 0.6, "handle": "bar" },
+        { "id": "us-w3", "type": "cabinet", "width": 0.6, "handle": "bar" }
+      ]
+    },
+    {
+      "id": "us-east", "kind": "run", "unitType": "base",
+      "position": [2.8, -1.5], "rotationY": -1.5707963,
+      "worktop": true, "plinth": true,
+      "materials": { "door": "lam_matt_sand", "carcass": "paint_white", "worktop": "wood_butcher", "handle": "metal_black" },
+      "modules": [
+        { "id": "us-e1", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-e2", "type": "cabinet", "width": 0.6, "handle": "bar" },
+        { "id": "us-e3", "type": "drawerBase", "width": 0.6, "handle": "bar" }
+      ]
+    },
+    {
+      "id": "us-wallrun", "kind": "run", "unitType": "wall",
+      "position": [-1.9, -2.5], "rotationY": 0,
+      "worktop": false, "plinth": false, "underLight": true,
+      "materials": { "door": "lam_matt_sand", "carcass": "paint_white", "worktop": "wood_butcher", "handle": "metal_black" },
+      "modules": [
+        { "id": "us-u1", "type": "cabinet", "width": 0.75, "handle": "none",
+          "compartments": [ { "id": "us-u1c1", "type": "door", "style": { "hinge": "L", "front": "biFold" }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "us-u2", "type": "cabinet", "width": 0.75, "handle": "none",
+          "compartments": [ { "id": "us-u2c1", "type": "door", "style": { "hinge": "L", "front": "biFold" }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "us-u3", "type": "cabinet", "width": 0.75, "handle": "none",
+          "compartments": [ { "id": "us-u3c1", "type": "door", "style": { "hinge": "L", "front": "liftUp", "profile": { "frame": "black", "glass": "fluted" } }, "shelvesInside": 1, "weight": 1 } ] }
+      ]
+    },
+    {
+      "id": "us-hood", "kind": "appliance", "applianceType": "hood",
+      "position": [0.5, -2.5], "rotationY": 0, "params": { "width": 0.6 }
+    },
+    {
+      "id": "us-fridge", "kind": "appliance", "applianceType": "fridge",
+      "position": [1.8, -2.5], "rotationY": 0,
+      "params": { "type": "topFreezer", "finish": "white", "width": 0.8, "height": 1.7 }
+    }
+  ]
+}

@@ -59,6 +59,27 @@ export function dim(x1, y1, x2, y2, label, { optional = false } = {}) {
 export const meters = (v) => `${v.toFixed(2)} m`;
 export const cmLabel = (v) => String(Math.round(v * 100));
 
+// Dimension label in the sheet's display unit (kept pure: the unit comes in
+// as an argument from the composer, never read from app state here).
+export function fmtDim(v, unit = 'mm') {
+  if (unit === 'ftin') {
+    const totalIn = v * 39.3701;
+    const ft = Math.floor(totalIn / 12);
+    const inches = Math.round((totalIn - ft * 12) * 4) / 4;
+    if (inches >= 12) return `${ft + 1}'-0"`;
+    return `${ft}'-${inches}"`;
+  }
+  return String(Math.round(v * 1000));
+}
+
+// Reference-tag bubble (white circle + centered tag text).
+export function tagBubble(x, y, tag) {
+  return (
+    `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="#ffffff" stroke="#2b3036" stroke-width="1"/>` +
+    T(x, y + 3.5, tag, 'lbl', 'middle')
+  );
+}
+
 // Diagonal-hatch pattern (backsplash / section fill). Define once per sheet.
 export const HATCH_DEF =
   '<pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +

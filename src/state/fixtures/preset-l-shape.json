@@ -1,0 +1,74 @@
+{
+  "room": { "width": 5.4, "depth": 4.6, "wallHeight": 2.6, "wallColor": "paint_white", "floorMaterial": "stone_concrete" },
+  "quote": { "hardwareTier": "premium", "gstPct": 18, "discountPct": 0, "rateOverrides": {} },
+  "items": [
+    {
+      "id": "ls-north", "kind": "run", "unitType": "base",
+      "position": [-2.7, -2.3], "rotationY": 0,
+      "worktop": true, "plinth": true, "backsplash": true,
+      "materials": { "door": "acr_navy", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_brass" },
+      "modules": [
+        { "id": "ls-n1", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "ls-n2", "type": "drawerBase", "width": 0.9, "handle": "jProfile" },
+        { "id": "ls-n3", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "ls-n4", "type": "dishwasher", "width": 0.6, "handle": "jProfile" }
+      ],
+      "features": [
+        { "id": "ls-sink", "type": "sink", "offsetX": 1.9, "params": {} },
+        { "id": "ls-tap", "type": "tap", "offsetX": 1.9, "params": {} }
+      ]
+    },
+    {
+      "id": "ls-west", "kind": "run", "unitType": "base",
+      "position": [-2.7, 0.4], "rotationY": 1.5707963,
+      "worktop": true, "plinth": true,
+      "materials": { "door": "acr_navy", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_brass" },
+      "modules": [
+        { "id": "ls-w1", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "ls-w2", "type": "cabinet", "width": 0.6, "handle": "jProfile" },
+        { "id": "ls-w3", "type": "drawerBase", "width": 0.6, "handle": "jProfile" }
+      ],
+      "features": [
+        { "id": "ls-hob", "type": "hob", "offsetX": 0.9, "params": { "burners": 4 } }
+      ]
+    },
+    {
+      "id": "ls-wallrun", "kind": "run", "unitType": "wall",
+      "position": [-2.7, -2.3], "rotationY": 0,
+      "worktop": false, "plinth": false, "underLight": true,
+      "materials": { "door": "acr_navy", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_brass" },
+      "modules": [
+        { "id": "ls-u1", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "ls-u1c1", "type": "door", "style": { "hinge": "L", "profile": { "frame": "gold", "glass": "clear" } }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "ls-u2", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "ls-u2c1", "type": "door", "style": { "hinge": "L", "profile": { "frame": "gold", "glass": "clear" }, "lit": true }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "ls-u3", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [ { "id": "ls-u3c1", "type": "door", "style": { "hinge": "R", "profile": { "frame": "gold", "glass": "clear" } }, "shelvesInside": 1, "weight": 1 } ] }
+      ]
+    },
+    {
+      "id": "ls-tall", "kind": "run", "unitType": "tall",
+      "position": [0.9, -2.3], "rotationY": 0,
+      "worktop": false, "plinth": true,
+      "materials": { "door": "acr_navy", "carcass": "paint_white", "worktop": "stone_quartz", "handle": "metal_brass" },
+      "modules": [
+        { "id": "ls-t1", "type": "cabinet", "width": 0.6, "handle": "jProfile",
+          "compartments": [
+            { "id": "ls-t1c1", "type": "door", "style": { "hinge": "L" }, "shelvesInside": 1, "weight": 1 },
+            { "id": "ls-t1c2", "type": "oven" },
+            { "id": "ls-t1c3", "type": "microwave" },
+            { "id": "ls-t1c4", "type": "drawer", "weight": 1 }
+          ] }
+      ]
+    },
+    {
+      "id": "ls-fridge", "kind": "appliance", "applianceType": "fridge",
+      "position": [1.6, -2.3], "rotationY": 0,
+      "params": { "type": "frenchDoor", "finish": "blackSteel", "width": 0.91, "height": 1.9 }
+    },
+    {
+      "id": "ls-hood", "kind": "appliance", "applianceType": "hood",
+      "position": [-2.7, -0.2], "rotationY": 1.5707963, "params": { "width": 0.6 }
+    }
+  ]
+}

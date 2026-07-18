@@ -1,0 +1,71 @@
+{
+  "room": { "width": 6.0, "depth": 5.0, "wallHeight": 2.7, "wallColor": "paint_charcoal", "floorMaterial": "stone_concrete" },
+  "quote": { "hardwareTier": "luxury", "gstPct": 18, "discountPct": 0, "rateOverrides": {} },
+  "items": [
+    {
+      "id": "il-north", "kind": "run", "unitType": "base",
+      "position": [-2.9, -2.5], "rotationY": 0,
+      "worktop": true, "plinth": true, "backsplash": true,
+      "materials": { "door": "smt_graphite", "carcass": "paint_charcoal", "worktop": "stone_granite", "handle": "metal_black" },
+      "modules": [
+        { "id": "il-n1", "type": "cabinet", "width": 0.6, "handle": "none" },
+        { "id": "il-n2", "type": "drawerBase", "width": 0.9, "handle": "none" },
+        { "id": "il-n3", "type": "cabinet", "width": 0.6, "handle": "none" },
+        { "id": "il-n4", "type": "dishwasher", "width": 0.6, "handle": "none" }
+      ],
+      "features": [
+        { "id": "il-sink", "type": "sink", "offsetX": 1.6, "params": {} },
+        { "id": "il-tap", "type": "tap", "offsetX": 1.6, "params": {} }
+      ]
+    },
+    {
+      "id": "il-wallrun", "kind": "run", "unitType": "wall",
+      "position": [-2.9, -2.5], "rotationY": 0,
+      "worktop": false, "plinth": false, "underLight": true,
+      "materials": { "door": "smt_graphite", "carcass": "paint_charcoal", "worktop": "stone_granite", "handle": "metal_black" },
+      "modules": [
+        { "id": "il-u1", "type": "cabinet", "width": 0.675, "handle": "none",
+          "compartments": [ { "id": "il-u1c1", "type": "door", "style": { "hinge": "L", "profile": { "frame": "black", "glass": "frosted" }, "lit": true }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "il-u2", "type": "cabinet", "width": 0.675, "handle": "none",
+          "compartments": [ { "id": "il-u2c1", "type": "door", "style": { "hinge": "L", "front": "liftUp", "profile": { "frame": "black", "glass": "frosted" }, "lit": true }, "shelvesInside": 1, "weight": 1 } ] },
+        { "id": "il-u3", "type": "cabinet", "width": 0.675, "handle": "none",
+          "compartments": [ { "id": "il-u3c1", "type": "door", "style": { "hinge": "R", "profile": { "frame": "black", "glass": "frosted" }, "lit": true }, "shelvesInside": 1, "weight": 1 } ] }
+      ]
+    },
+    {
+      "id": "il-tall", "kind": "run", "unitType": "tall",
+      "position": [-2.9, 0.2], "rotationY": 1.5707963,
+      "worktop": false, "plinth": true,
+      "materials": { "door": "smt_graphite", "carcass": "paint_charcoal", "worktop": "stone_granite", "handle": "metal_black" },
+      "modules": [
+        { "id": "il-t1", "type": "cabinet", "width": 0.6, "handle": "none",
+          "compartments": [
+            { "id": "il-t1c1", "type": "door", "style": { "hinge": "L" }, "shelvesInside": 2, "weight": 1 },
+            { "id": "il-t1c2", "type": "oven" },
+            { "id": "il-t1c3", "type": "drawer", "weight": 1 }
+          ] }
+      ]
+    },
+    {
+      "id": "il-island", "kind": "run", "unitType": "island",
+      "position": [0.9, -0.2], "rotationY": 3.1415927,
+      "worktop": true, "plinth": true, "islandFaces": "shutter",
+      "materials": { "door": "smt_graphite", "carcass": "paint_charcoal", "worktop": "stone_granite", "handle": "metal_black" },
+      "modules": [
+        { "id": "il-i1", "type": "cabinet", "width": 0.8, "handle": "none" },
+        { "id": "il-i2", "type": "drawerBase", "width": 0.8, "handle": "none" }
+      ],
+      "features": [
+        { "id": "il-hob", "type": "hob", "offsetX": 0.8, "params": { "burners": 4 } }
+      ]
+    },
+    {
+      "id": "il-fridge", "kind": "appliance", "applianceType": "fridge",
+      "position": [1.9, -2.5], "rotationY": 0,
+      "params": { "type": "sideBySide", "finish": "blackSteel", "width": 0.95, "height": 1.85 }
+    },
+    { "id": "il-stool1", "kind": "furniture", "furnitureType": "stool", "position": [-0.2, 0.55], "rotationY": 0, "params": { "preset": "bar" } },
+    { "id": "il-stool2", "kind": "furniture", "furnitureType": "stool", "position": [0.55, 0.55], "rotationY": 0, "params": { "preset": "bar" } },
+    { "id": "il-stool3", "kind": "furniture", "furnitureType": "stool", "position": [1.3, 0.55], "rotationY": 0, "params": { "preset": "bar" } }
+  ]
+}

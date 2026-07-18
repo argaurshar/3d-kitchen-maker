@@ -112,14 +112,19 @@ appliances. Full schema and standard dimensions: `SPEC.md`.
 | Appliances: fridge (4 types, 6 finishes, open state), hob/sink/tap as worktop features, hood | done |
 | Parametric stools + island seating overhang | done |
 | Picking, rotation gizmo, drag with grid/wall/run snapping, ghost placement | done |
-| Paint mode: radial wheel, 29 swatches, live preview, walls/floor | done |
+| Paint mode: paged radial wheel, 72 finish swatches (laminate/acrylic/PU/membrane/veneer/super-matt/lacquered-glass + glass/LED), live preview, walls/floor | done |
+| Shutter systems: hinged L/R, top-hung lift-up, bi-fold lift-up, aluminium glass-profile (silver/black/gold × clear/frosted/fluted), backlit LED panes, handleless None / J-Profile | done |
+| Island shutter faces on back + both ends; under-cabinet LED strips; Day / Evening / Night lighting | done |
+| Ergonomics: undo/redo (Ctrl+Z/Y), arrow-nudge, on-selection quick actions (rotate/duplicate/materials/delete), double-click-to-paint, room resizing, mm ↔ ft-in units | done |
+| Quotation (₹): live line-item quote engine, finish/hardware tiers, GST + discount, editable rate card, printable client proposal | done |
 | Preview auto-orbit + first-person walk mode | done |
 | Persistence (localStorage autosave), file menu, JSON import/export | done |
 | Side-elevation planner (per-wall views + element detection + add-to-wall) | done |
 | Missing-element suggestions with one-click add | done |
-| True-2D CAD drawing export (vector plan + elevations, symbols, chained dims, PNG + SVG) | done |
+| True-2D CAD drawing export (vector plan + elevations, reference tags + legend, LED symbols, mm/ft-in chained dims, PNG + SVG) | done |
+| Preset library: straight / L-shape / U-shape / island-LED themed kitchens | done |
 | Hex backsplash | done (optional flag per base run) |
-| **Lights** | inferred: the video never shows its behavior; implemented as Day / Warm-evening lighting presets |
+| **Lights** | inferred: the video never shows its behavior; implemented as Day / Evening / Night presets with under-cabinet LED + backlit shutters |
 | **Solid** | inferred: implemented as clay mode (all items matte white, reversible) |
 | **Share** | inferred: implemented as downloads — scene JSON + hero PNG + 4-view contact sheet |
 | Per-wall paint, hood auto-align to hob, corner-cabinet interiors | partial / simplified |
