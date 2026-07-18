@@ -65,11 +65,11 @@ check('toolbar: Select activates select tool',
   (await app(() => window.__app.getTool())) === 'select');
 
 await tb('furnish').click();
-check('toolbar: Furnish opens furnish row',
-  !(await page.locator('.furnish-row').getAttribute('class')).includes('hidden'));
+check('toolbar: Furnish opens the catalog',
+  !(await page.locator('.catalog').getAttribute('class')).includes('hidden'));
 await tb('furnish').click();
-check('toolbar: Furnish closes furnish row',
-  (await page.locator('.furnish-row').getAttribute('class')).includes('hidden'));
+check('toolbar: Furnish closes the catalog',
+  (await page.locator('.catalog').getAttribute('class')).includes('hidden'));
 
 await tb('snap').click();
 check('toolbar: Snap toggles on', (await tb('snap').getAttribute('class')).includes('on'));
@@ -103,23 +103,41 @@ await tb('share').click();
 await page.waitForTimeout(3500);
 check('toolbar: Share downloads files', downloads >= 1, `downloads=${downloads}`);
 
-// ---------------------------------------------------------------- FURNISH PLACEMENT
-for (const label of ['Base unit', 'Island', 'Stool', 'Fridge']) {
+// ---------------------------------------------------------------- CATALOG PLACEMENT
+async function catalogPick(tab, label) {
+  if ((await page.locator('.catalog:not(.hidden)').count()) === 0) {
+    await tb('furnish').click();
+    await page.waitForTimeout(100);
+  }
+  await page.locator('.catalog-tab', { hasText: tab }).click();
+  await page.waitForTimeout(80);
+  await page.locator('.catalog-item', { hasText: label }).first().click();
+  await page.waitForTimeout(100);
+}
+for (const [tab, label] of [['Units', 'Base unit'], ['Units', 'Island'], ['Seating', 'Stool'], ['Appliances', 'Fridge']]) {
   await reload();
-  await tb('furnish').click();
-  await page.locator('.furnish-item', { hasText: label }).first().click();
+  await catalogPick(tab, label);
   const placing = await app(() => window.__app.isPlacing());
   const before = await app(() => window.__app.store.get().items.length);
   await canvasClick(680, 430);
   const after = await app(() => window.__app.store.get().items.length);
-  check(`furnish: place ${label}`, placing && after === before + 1, `placing=${placing} ${before}->${after}`);
+  check(`catalog: place ${label}`, placing && after === before + 1, `placing=${placing} ${before}->${after}`);
 }
 // Wall unit requires wall snap; just assert placement mode begins.
 await reload();
-await tb('furnish').click();
-await page.locator('.furnish-item', { hasText: 'Wall unit' }).first().click();
-check('furnish: Wall unit enters placement', await app(() => window.__app.isPlacing()));
+await catalogPick('Units', 'Wall unit');
+check('catalog: Wall unit enters placement', await app(() => window.__app.isPlacing()));
 await page.keyboard.press('Escape');
+// Presets tab loads a complete design.
+await guard('catalog preset', async () => {
+  await reload();
+  await app(() => window.__app.actions.removeItem('stool-1'));
+  await page.waitForTimeout(100);
+  await catalogPick('Presets', 'Showroom L-kitchen');
+  await page.waitForTimeout(400);
+  const hasStool = await app(() => window.__app.store.get().items.some((i) => i.id === 'stool-1'));
+  check('catalog: preset load replaces the scene', hasStool);
+});
 
 // ---------------------------------------------------------------- CHROME
 await reload();
@@ -467,6 +485,77 @@ await guard('nudge-rotate', async () => {
   check('rotate: rotateItem adds 90°', rot.ok && Math.abs(r1 - r0 - Math.PI / 2) < 1e-9);
   const dup = await app(() => window.__app.actions.duplicateItem('stool-1'));
   check('duplicate: duplicateItem returns new id', dup.ok && typeof dup.id === 'string');
+});
+
+// ---------------------------------------------------------------- QUICK ACTIONS
+await guard('quick actions', async () => {
+  await reload();
+  await app(() => window.__app.select('stool-2'));
+  await app(() => window.__app.setCamera({ position: [4.2, 3.2, 4.4], target: [-1.3, 0.65, -1.2] }));
+  await page.waitForTimeout(400);
+  check('quickActions: appear on selection', (await page.locator('.quick-actions:not(.hidden)').count()) > 0);
+
+  const r0 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-2').rotationY ?? 0);
+  await page.locator('.qa-btn[title="Rotate 90°"]').click({ force: true });
+  await page.waitForTimeout(150);
+  const r1 = await app(() => window.__app.store.get().items.find((i) => i.id === 'stool-2').rotationY ?? 0);
+  check('quickActions: rotate button turns the item', Math.abs(Math.abs(r1 - r0) - Math.PI / 2) < 1e-6, `${r0}->${r1}`);
+
+  const nBefore = await app(() => window.__app.store.get().items.length);
+  await page.locator('.qa-btn[title="Duplicate"]').click({ force: true });
+  await page.waitForTimeout(400); // let history capture the duplicate as its own step
+  const nAfter = await app(() => window.__app.store.get().items.length);
+  const selected = await app(() => window.__app.getSelection());
+  check('quickActions: duplicate adds and selects the clone', nAfter === nBefore + 1 && selected !== 'stool-2', `sel=${selected}`);
+
+  await page.locator('.qa-btn[title*="Delete"]').click({ force: true });
+  await page.waitForTimeout(500);
+  const nDeleted = await app(() => window.__app.store.get().items.length);
+  check('quickActions: delete removes the clone', nDeleted === nBefore, `${nAfter}->${nDeleted}`);
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(250);
+  const nUndone = await app(() => window.__app.store.get().items.length);
+  check('quickActions: Ctrl+Z restores the deleted item', nUndone === nAfter, `${nDeleted}->${nUndone}`);
+
+  // Materials button opens the wheel without switching tools.
+  await app(() => window.__app.select('island-1'));
+  await page.waitForSelector('.quick-actions:not(.hidden)', { timeout: 6000 });
+  await page.locator('.qa-btn[title="Materials"]').click({ force: true });
+  await page.waitForTimeout(200);
+  check('quickActions: Materials opens the wheel in select tool',
+    (await page.locator('.wheel:not(.hidden)').count()) > 0 && (await app(() => window.__app.getTool())) === 'select');
+  await page.keyboard.press('Escape');
+});
+
+// ---------------------------------------------------------------- DBLCLICK + HELP
+await guard('dblclick + help', async () => {
+  await reload();
+  await app(() => window.__app.setCamera({ position: [4.2, 3.2, 4.4], target: [-1.3, 0.65, -1.2] }));
+  await page.waitForTimeout(250);
+  const pt = await app(() => {
+    for (let y = 200; y < 600; y += 24) {
+      for (let x = 350; x < 1050; x += 24) {
+        const hit = window.__app.pickAt(x, y);
+        if (hit.itemId && hit.itemId !== 'room' && hit.itemId !== 'studio') return [x, y];
+      }
+    }
+    return null;
+  });
+  check('dblclick: found an item point', Boolean(pt));
+  if (pt) {
+    await page.mouse.dblclick(pt[0], pt[1]);
+    await page.waitForTimeout(250);
+    check('dblclick: opens the material wheel with select tool',
+      (await page.locator('.wheel:not(.hidden)').count()) > 0 && (await app(() => window.__app.getTool())) === 'select');
+    await page.keyboard.press('Escape');
+  }
+
+  await page.keyboard.press('?');
+  await page.waitForTimeout(150);
+  check('help: ? opens the overlay', (await page.locator('.help-overlay:not(.hidden)').count()) > 0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(120);
+  check('help: Escape closes the overlay', (await page.locator('.help-overlay:not(.hidden)').count()) === 0);
 });
 
 // ---------------------------------------------------------------- SUMMARY

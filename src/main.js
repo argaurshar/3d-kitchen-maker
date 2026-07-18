@@ -16,6 +16,9 @@ import { initPersistence } from './state/persist.js';
 import { initHistory, undo, redo, historyDepth } from './state/history.js';
 import { initShortcuts } from './ui/shortcuts.js';
 import { createRoomPanel } from './ui/roomPanel.js';
+import { createQuickActions } from './ui/quickActions.js';
+import { createCatalog } from './ui/catalog.js';
+import { createHelpOverlay } from './ui/helpOverlay.js';
 import { updateTweens } from './core/tween.js';
 import { installDebugApi } from './core/debug.js';
 import { initPanel } from './ui/panel.js';
@@ -89,23 +92,42 @@ function shareScene() {
 }
 
 const roomPanel = createRoomPanel();
+const helpOverlay = createHelpOverlay();
+
+function beginPlace(kind) {
+  picker.setTool('select');
+  toolbar.setActive('select');
+  picker.beginPlacement(kind);
+}
+
+const catalog = createCatalog({
+  onPlace: beginPlace,
+  onLoadPreset: (name) => {
+    picker.select(null);
+    loadFixtureScene(name)
+      .then((scene_) => {
+        store.replace(scene_);
+        toast('Design loaded — Ctrl+Z restores your previous scene');
+      })
+      .catch(() => toast('Could not load that design'));
+  },
+});
 
 const toolbar = createToolbar({
   onTool: (t) => picker.setTool(t),
-  onPlace: (kind) => {
-    picker.setTool('select');
-    toolbar.setActive('select');
-    picker.beginPlacement(kind);
-  },
+  onPlace: beginPlace,
   onSnap: (v) => picker.setSnap(v),
   onSolid: (v) => projection.setClay(v),
   onLights: (name) => applyLightPreset(lights, name),
   onShare: shareScene,
   onBuild: () => roomPanel.toggle(),
+  onFurnish: () => catalog.toggle(),
+  onFurnishClose: () => catalog.close(),
 });
 
+const quickActions = createQuickActions({ camera, renderer, projection, picker, paint });
 initHistory({ isDragging: () => picker.isDragging() });
-initShortcuts({ picker });
+initShortcuts({ picker, onHelp: () => helpOverlay.toggle() });
 
 // Shared by "add to this wall" and the missing-element suggestions: reset to
 // an editable 3D view and start ghost placement of the requested element.
@@ -173,6 +195,7 @@ const viewChrome = createViewChrome({
       toast('Could not read that file');
     }
   },
+  onHelp: () => helpOverlay.toggle(),
 });
 preview.onExit(() => viewChrome.setPreviewActive(false));
 const stats = createStats(renderer);
@@ -226,6 +249,7 @@ renderer.setAnimationLoop((time) => {
   // Walking uses a looser cap so speed holds up at low frame rates.
   walk.update(Math.min(rawDt, 0.3));
   picker.update();
+  quickActions.update(picker.isDragging());
   renderer.render(scene, camera);
   stats.tick();
   if (firstFrame) {

@@ -175,6 +175,12 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
       }
       return;
     }
+    // A wheel opened outside paint mode (dblclick / quick action) closes on
+    // any canvas click instead of routing to selection.
+    if (tool !== 'paint' && paint?.isOpen()) {
+      paint.deactivate();
+      return;
+    }
     const hit = pick(event);
     if (tool === 'delete') {
       if (hit.kind === 'item') {
@@ -189,6 +195,13 @@ export function createPicker({ scene, camera, renderer, controls, projection, pa
     }
     if (hit.kind === 'item') select(hit.itemId);
     else if (hit.kind === 'floor') select(null);
+  });
+
+  // Double-click any paintable surface to open the material wheel directly.
+  dom.addEventListener('dblclick', (event) => {
+    if (suspended || dragging || ghost.active() || tool !== 'select') return;
+    const hit = pick(event);
+    if (hit.object && hit.point) paint?.openAt(hit);
   });
 
   dom.addEventListener('contextmenu', (event) => {

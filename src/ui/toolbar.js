@@ -29,18 +29,6 @@ const MAIN_ITEMS = [
   { id: 'solid', label: 'Solid', kind: 'toggle' },
 ];
 
-const FURNISH_ITEMS = [
-  { label: 'Base unit', kind: { type: 'run', unitType: 'base' } },
-  { label: 'Wall unit', kind: { type: 'run', unitType: 'wall' } },
-  { label: 'Tall unit', kind: { type: 'run', unitType: 'tall' } },
-  { label: 'Island', kind: { type: 'run', unitType: 'island' } },
-  { label: 'Fridge', kind: { type: 'appliance', applianceType: 'fridge' } },
-  { label: 'Sink', kind: { type: 'appliance', applianceType: 'sink' } },
-  { label: 'Hob', kind: { type: 'appliance', applianceType: 'hob' } },
-  { label: 'Stool', kind: { type: 'furniture', furnitureType: 'stool' } },
-  { label: 'Tap', kind: { type: 'appliance', applianceType: 'tap' } },
-];
-
 export function toast(message) {
   document.querySelector('.toast')?.remove();
   const node = el('div', 'toast', message);
@@ -51,11 +39,10 @@ export function toast(message) {
 
 export function createToolbar(handlers) {
   const bar = el('div', 'toolbar');
-  const row = el('div', 'furnish-row hidden');
-  document.body.append(bar, row);
+  document.body.append(bar);
 
   const buttons = new Map();
-  const state = { tool: 'select', snap: false, solid: false, lights: 'day', furnishOpen: false };
+  const state = { tool: 'select', snap: false, solid: false, lights: 'day' };
 
   function setActive(toolId) {
     state.tool = toolId;
@@ -66,9 +53,9 @@ export function createToolbar(handlers) {
     }
   }
 
+  // The furnish button fronts the catalog popover; handlers own its state.
   function closeFurnish() {
-    state.furnishOpen = false;
-    row.classList.add('hidden');
+    handlers.onFurnishClose?.();
     buttons.get('furnish')?.classList.remove('active');
   }
 
@@ -82,9 +69,8 @@ export function createToolbar(handlers) {
         setActive(item.id);
         handlers.onTool?.(item.id);
       } else if (item.id === 'furnish') {
-        state.furnishOpen = !state.furnishOpen;
-        row.classList.toggle('hidden', !state.furnishOpen);
-        btn.classList.toggle('active', state.furnishOpen);
+        const open = Boolean(handlers.onFurnish?.());
+        btn.classList.toggle('active', open);
       } else if (item.id === 'snap') {
         state.snap = !state.snap;
         btn.classList.toggle('on', state.snap);
@@ -115,15 +101,6 @@ export function createToolbar(handlers) {
     closeFurnish();
   });
   bar.appendChild(collapse);
-
-  for (const item of FURNISH_ITEMS) {
-    const btn = el('button', 'furnish-item', item.label);
-    btn.addEventListener('click', () => {
-      closeFurnish();
-      handlers.onPlace?.(item.kind);
-    });
-    row.appendChild(btn);
-  }
 
   setActive('select');
   return { setActive, closeFurnish, toast };

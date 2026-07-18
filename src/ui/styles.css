@@ -296,31 +296,128 @@ input[type='range'] {
 .toolbar.collapsed .tb-item:not(.tb-collapse) { display: none; }
 .toolbar.collapsed .tb-collapse svg { transform: rotate(180deg); }
 
-.furnish-row {
+/* ---------- Catalog popover (Furnish) ---------- */
+.catalog {
   position: fixed;
   bottom: 76px;
   left: 50%;
+  transform: translateX(-50%);
+  width: 460px;
+  background: #26282cf8;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 11;
+  overflow: hidden;
+}
+.catalog.hidden { display: none; }
+.catalog-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid #3a3d42;
+}
+.catalog-tab {
+  border: 0;
+  background: transparent;
+  color: #9aa0a6;
+  padding: 7px 12px 9px;
+  font-size: 12.5px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.catalog-tab:hover { color: #e6e7e9; }
+.catalog-tab.active { color: #e6e7e9; border-bottom-color: #8fa387; font-weight: 600; }
+.catalog-body {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+.catalog-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border: 1px solid #3a3d42;
+  border-radius: 9px;
+  background: #313438;
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+}
+.catalog-item:hover { background: #3d4145; }
+.catalog-item-label { color: #e6e7e9; font-size: 12.5px; font-weight: 600; }
+.catalog-item-hint { color: #9aa0a6; font-size: 11px; }
+
+/* ---------- Quick actions on selection ---------- */
+.quick-actions {
+  position: fixed;
   transform: translateX(-50%);
   display: flex;
   gap: 4px;
   background: #26282cf0;
   border-radius: 999px;
-  padding: 6px 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 11;
+  padding: 4px 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  z-index: 9;
 }
-.furnish-row.hidden { display: none; }
-.furnish-item {
+.quick-actions.hidden { display: none; }
+.qa-btn {
+  width: 30px;
+  height: 30px;
   border: 0;
+  border-radius: 50%;
   background: transparent;
-  color: #c9ccd1;
-  padding: 6px 11px;
-  border-radius: 999px;
-  font-size: 12px;
+  color: #e6e7e9;
+  font-size: 14px;
   cursor: pointer;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.furnish-item:hover { background: #4a545e; color: #fff; }
+.qa-btn:hover { background: #4a545e; }
+
+/* ---------- Help overlay ---------- */
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 16, 18, 0.62);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.help-overlay.hidden { display: none; }
+.help-card {
+  width: min(860px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: #26282cfa;
+  border-radius: 16px;
+  padding: 22px 26px;
+  color: #e6e7e9;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.help-title { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 26px;
+}
+.help-section-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa387;
+  margin-bottom: 6px;
+}
+.help-row { display: flex; gap: 10px; padding: 3px 0; font-size: 12.5px; }
+.help-term { color: #e6e7e9; font-weight: 600; min-width: 168px; }
+.help-what { color: #b9bdc2; }
+.help-hint { margin-top: 14px; font-size: 11.5px; color: #9aa0a6; text-align: center; }
+.help-btn { font-weight: 700; font-size: 15px; }
 
 .toast {
   position: fixed;
@@ -625,7 +722,8 @@ input[type='range'] {
 /* Preview / walk hide every editor pixel except the view chrome. */
 body.preview-mode .toolbar,
 body.preview-mode .panel,
-body.preview-mode .furnish-row,
+body.preview-mode .catalog,
+body.preview-mode .quick-actions,
 body.preview-mode .plus-btn,
 body.preview-mode .pill-btn,
 body.preview-mode .file-menu,
@@ -634,7 +732,8 @@ body.preview-mode .elev-panel,
 body.preview-mode .toast,
 body.walk-mode .toolbar,
 body.walk-mode .panel,
-body.walk-mode .furnish-row,
+body.walk-mode .catalog,
+body.walk-mode .quick-actions,
 body.walk-mode .plus-btn,
 body.walk-mode .pill-btn,
 body.walk-mode .file-menu,

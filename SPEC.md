@@ -108,6 +108,11 @@ Updated whenever a feature lands (see CLAUDE.md).
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P19 — Ergonomics**: on-selection quick actions (rotate 90° / duplicate /
+      materials / delete, `src/ui/quickActions.js`); double-click any surface opens
+      the material wheel without a mode switch; categorized catalog with Presets tab
+      replaces the furnish row (`src/ui/catalog.js`); help & shortcuts overlay on "?"
+      (`src/ui/helpOverlay.js`)
 - [x] **P18 — Foundations**: actions split under `src/state/actions/` (barrel kept);
       undo/redo (`src/state/history.js`, Ctrl+Z/Y, gesture-coalescing snapshots);
       display units mm/ft-in (`src/state/units.js`); room width/depth/height editing

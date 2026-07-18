@@ -4,14 +4,17 @@ const PERSON_SVG =
   '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><circle cx="8" cy="4.4" r="2.4"/><path d="M8 7.6c-2.8 0-4.6 1.5-4.6 3.6V15h2.2v-3.4h.8V15h3.2v-3.4h.8V15h2.2v-3.8c0-2.1-1.8-3.6-4.6-3.6z"/></svg>';
 
 // Top-right preview chrome (person + Preview pill) and top-left file menu.
-export function createViewChrome({ onPreview, onWalk, onNew, onSaveJson, onLoadJson }) {
+export function createViewChrome({ onPreview, onWalk, onNew, onSaveJson, onLoadJson, onHelp }) {
   const chrome = el('div', 'view-chrome');
+  const help = el('button', 'person-btn help-btn', '?');
+  help.title = 'Help & shortcuts (?)';
   const person = el('button', 'person-btn');
   person.innerHTML = PERSON_SVG;
   person.title = 'Walk around (WASD + mouse)';
   const pill = el('button', 'preview-pill', 'Preview');
-  chrome.append(person, pill);
+  chrome.append(help, person, pill);
   document.body.appendChild(chrome);
+  help.addEventListener('click', () => onHelp?.());
   person.addEventListener('click', onWalk);
   pill.addEventListener('click', onPreview);
 

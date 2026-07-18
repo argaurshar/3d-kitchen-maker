@@ -4,7 +4,9 @@ import { store } from './store.js';
 // equality, ~5-20 KB each) on a debounce, so slider drags and gizmo moves
 // coalesce into single history steps. Replays go through store.replace,
 // which the projection layer treats as a full rebuild.
-const DEBOUNCE_MS = 300;
+// Short debounce: bursts from one gesture still coalesce (held pointers
+// defer captures anyway), while distinct button clicks stay separate steps.
+const DEBOUNCE_MS = 200;
 const CAP = 50;
 
 let past = [];

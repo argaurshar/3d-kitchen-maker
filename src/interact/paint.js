@@ -173,12 +173,19 @@ export function createPaintTool({ scene, camera, renderer, projection }) {
         close();
         return;
       }
+      this.openAt(hit);
+    },
+
+    // Direct entry used outside the paint tool (double-click, quick actions):
+    // opens the wheel on the given hit without requiring a mode switch.
+    openAt(hit) {
       const next = surfaceFromHit(hit);
-      if (!next) return;
+      if (!next) return false;
       surface = next;
       showHover(next);
       anchor = hit.point.clone();
       wheel.show(next);
+      return true;
     },
 
     // Reproject the anchor every frame so the wheel sticks while orbiting.
