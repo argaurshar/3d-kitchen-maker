@@ -5,9 +5,13 @@ import { box, cylinder, boxGeom, cylGeom, mergeParts } from './util.js';
 const T = DIMS.frontThickness;
 const OPEN_DOOR_RAD = THREE.MathUtils.degToRad(105);
 const DRAWER_TRAVEL = 0.45;
+const FLAP_RAD = THREE.MathUtils.degToRad(78);
+const BIFOLD_RAD = THREE.MathUtils.degToRad(72);
 
 // Open-state contract: openable groups carry userData
-// { openable: 'door'|'drawer', openAmount, hingeSign?, closedZ? }.
+// { openable: 'door'|'drawer'|'flapUp'|'biFold', openAmount, hingeSign?,
+//   closedZ? }. flapUp pivots at the top edge; biFold additionally folds a
+// child group named 'biFoldLower' back against the upper leaf.
 export function applyOpenAmount(group, amount) {
   const ud = group.userData;
   ud.openAmount = amount;
@@ -15,6 +19,12 @@ export function applyOpenAmount(group, amount) {
     group.rotation.y = ud.hingeSign * amount * OPEN_DOOR_RAD;
   } else if (ud.openable === 'drawer') {
     group.position.z = ud.closedZ + amount * DRAWER_TRAVEL;
+  } else if (ud.openable === 'flapUp') {
+    group.rotation.x = -amount * FLAP_RAD;
+  } else if (ud.openable === 'biFold') {
+    group.rotation.x = -amount * BIFOLD_RAD;
+    const lower = group.getObjectByName('biFoldLower');
+    if (lower) lower.rotation.x = amount * 2 * BIFOLD_RAD;
   }
 }
 
@@ -24,7 +34,9 @@ function frameWidth(w, h) {
 
 // Shaker panel with origin at its bottom-left corner; spans 0..w, 0..h,
 // z 0..T. glassMat !== null replaces the center panel with a thin pane.
-function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kind, hinge, tag }) {
+// Exported: alternative panel looks (profile glass) and decorative faces
+// (island shutters) share this signature and the handle helpers.
+export function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kind, hinge, tag }) {
   const g = new THREE.Group();
   const role = kind === 'drawer' ? 'drawerFront' : 'doorFront';
   const fw = frameWidth(w, h);
@@ -68,6 +80,13 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
     const hx = kind === 'drawer' ? w / 2 : hinge === 'R' ? 0.08 : w - 0.08;
     hole.position.set(hx, kind === 'drawer' ? h / 2 : h - 0.08, T / 2 + 0.0005);
     g.add(hole);
+  } else if (handleStyle === 'none') {
+    // Handleless push-to-open: no hardware at all.
+  } else if (handleStyle === 'jProfile') {
+    // Gola/J-profile: slim channel lip along the top edge.
+    const lip = box(w, 0.013, 0.012, handleMat, tag('handle'));
+    lip.position.set(w / 2, h - 0.0065, 0.004);
+    g.add(lip);
   } else {
     addBarHandle(g, { w, h, kind, hinge, material: handleMat, tag });
   }
@@ -77,7 +96,7 @@ function buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kin
 // Bar: horizontal near the top edge (drawers: centered); vertical at
 // mid-height for tall doors, always on the side opposite the hinge.
 // Bar + posts merge into one mesh.
-function addBarHandle(g, { w, h, kind, hinge, material, tag }) {
+export function addBarHandle(g, { w, h, kind, hinge, material, tag }) {
   const verticalBar = kind === 'door' && h > 0.9;
   const length = verticalBar ? Math.min(0.35, h * 0.35) : Math.min(0.15, w * 0.45);
   let cx;
@@ -105,7 +124,9 @@ function addBarHandle(g, { w, h, kind, hinge, material, tag }) {
 
 // Door front(s) for a compartment rect. hinge 'double' yields two leaves.
 // Each leaf group pivots on its hinge edge and honors the open contract.
-export function buildDoorFronts({ rect, zBack, hinge, glassMat, doorMat, handleStyle, handleMat, tag }) {
+// panelBuilder swaps the look (shaker vs. profile glass) independently of
+// the leaf mechanics.
+export function buildDoorFronts({ rect, zBack, hinge, glassMat, doorMat, handleStyle, handleMat, tag, panelBuilder = buildShakerPanel }) {
   const { x0, x1, y0, y1 } = rect;
   const h = y1 - y0;
   const leaves = [];
@@ -123,7 +144,7 @@ export function buildDoorFronts({ rect, zBack, hinge, glassMat, doorMat, handleS
     leaf.name = 'door';
     leaf.position.set(def.hinge === 'R' ? def.xb : def.xa, y0, zBack);
     leaf.userData = { openable: 'door', openAmount: 0, hingeSign: def.hinge === 'R' ? 1 : -1 };
-    const panel = buildShakerPanel({ w, h, doorMat, glassMat, handleStyle, handleMat, kind: 'door', hinge: def.hinge, tag });
+    const panel = panelBuilder({ w, h, doorMat, glassMat, handleStyle, handleMat, kind: 'door', hinge: def.hinge, tag });
     panel.position.x = def.hinge === 'R' ? -w : 0;
     leaf.add(panel);
     leaves.push(leaf);

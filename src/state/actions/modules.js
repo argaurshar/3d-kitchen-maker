@@ -3,6 +3,9 @@ import {
   COMPARTMENT_TYPES,
   HANDLE_STYLES,
   HINGES,
+  FRONT_STYLES,
+  PROFILE_FRAMES,
+  PROFILE_GLASS,
   MODULE_TEMPLATES,
   COMPARTMENT_TEMPLATES,
   moduleWidthRange,
@@ -136,6 +139,22 @@ export function setCompartmentParam(itemId, moduleId, compartmentId, key, value)
       comp.style = { ...comp.style, hinge: value };
     } else if (key === 'glass') {
       comp.style = { ...comp.style, glass: Boolean(value) };
+    } else if (key === 'front') {
+      if (!FRONT_STYLES.includes(value)) return fail(`unknown front style "${value}"`);
+      comp.style = { ...comp.style, front: value };
+    } else if (key === 'profile') {
+      // Boolean toggle: on -> default silver/clear frame; off -> plain panel.
+      comp.style = { ...comp.style, profile: value ? { frame: 'silver', glass: 'clear' } : null };
+    } else if (key === 'profileFrame') {
+      if (!comp.style?.profile) return fail('enable the profile shutter first');
+      if (!PROFILE_FRAMES.includes(value)) return fail(`unknown frame finish "${value}"`);
+      comp.style = { ...comp.style, profile: { ...comp.style.profile, frame: value } };
+    } else if (key === 'profileGlass') {
+      if (!comp.style?.profile) return fail('enable the profile shutter first');
+      if (!PROFILE_GLASS.includes(value)) return fail(`unknown glass style "${value}"`);
+      comp.style = { ...comp.style, profile: { ...comp.style.profile, glass: value } };
+    } else if (key === 'lit') {
+      comp.style = { ...comp.style, lit: Boolean(value) };
     } else {
       return fail(`unknown compartment param "${key}"`);
     }

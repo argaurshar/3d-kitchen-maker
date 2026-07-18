@@ -1,4 +1,4 @@
-import { makeWoodTexture, makeBrushedTexture, makeTileTexture } from './textures.js';
+import { makeWoodTexture, makeBrushedTexture, makeTileTexture, makeFlutedTexture } from './textures.js';
 import {
   makeMarbleTexture,
   makeGraniteTexture,
@@ -108,6 +108,48 @@ export const SWATCHES = [
     label: 'Appliance Glass',
     category: 'glass',
     params: { color: '#15181b', roughness: 0.15, metalness: 0.6 },
+  },
+  // Profile-shutter glass variants (aluminium-frame shutters).
+  {
+    id: 'glass_clear',
+    label: 'Clear Glass',
+    category: 'glass',
+    params: { color: '#dde8ea', roughness: 0.05, metalness: 0.08, transparent: true, opacity: 0.16, depthWrite: false },
+  },
+  {
+    id: 'glass_frosted',
+    label: 'Frosted Glass',
+    category: 'glass',
+    params: { color: '#e7ebea', roughness: 0.62, metalness: 0, transparent: true, opacity: 0.55, depthWrite: false },
+  },
+  {
+    id: 'glass_fluted',
+    label: 'Fluted Glass',
+    category: 'glass',
+    params: {
+      color: '#e2e8e8',
+      roughness: 0.5,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.48,
+      depthWrite: false,
+      roughnessMap: () => makeFlutedTexture(),
+    },
+  },
+  // Backlit shutter pane: warm emissive glow through frosted glass.
+  {
+    id: 'glass_led',
+    label: 'Backlit Panel',
+    category: 'glass',
+    params: {
+      color: '#f6f1e6',
+      roughness: 0.55,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.85,
+      emissive: '#ffdfa3',
+      emissiveIntensity: 1.1,
+    },
   },
   {
     id: 'appliance_dark',

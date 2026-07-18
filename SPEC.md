@@ -108,6 +108,13 @@ Updated whenever a feature lands (see CLAUDE.md).
       (`src/ui/elevations.js`, `src/state/elements.js`)
 - [x] **P16 — Interaction audit**: `tools/button-audit.mjs` drives every button and
       control in the real DOM and asserts each produced its expected effect (52 checks)
+- [x] **P20 — Shutter systems**: per-door front styles hinged / top-hung lift-up /
+      bi-fold (applyOpenAmount contract extended; `src/build/frontsLift.js`),
+      aluminium glass-profile shutters with silver/black/gold frames and
+      clear/frosted/fluted glass (`src/build/frontsProfile.js`), backlit LED panes
+      (`glass_led` emissive swatch), handleless None / J-Profile handle styles,
+      island shutter faces on back + both ends (`src/build/islandFaces.js`,
+      `islandFaces:'shutter'`), 2D drawing symbols for all of the above
 - [x] **P19 — Ergonomics**: on-selection quick actions (rotate 90° / duplicate /
       materials / delete, `src/ui/quickActions.js`); double-click any surface opens
       the material wheel without a mode switch; categorized catalog with Presets tab

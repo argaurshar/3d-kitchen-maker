@@ -129,3 +129,25 @@ export function makeBrushedTexture({ size = 256, strength = 0.5, seed = 40 } = {
   texture.anisotropy = 4;
   return texture;
 }
+
+// Vertical-flute roughness map for fluted profile glass: alternating soft
+// bands read as reeded glass under light.
+export function makeFlutedTexture({ size = 128, flutes = 10 } = {}) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const bw = size / flutes;
+  for (let i = 0; i < flutes; i += 1) {
+    const g = ctx.createLinearGradient(i * bw, 0, (i + 1) * bw, 0);
+    g.addColorStop(0, '#9a9a9a');
+    g.addColorStop(0.5, '#e8e8e8');
+    g.addColorStop(1, '#9a9a9a');
+    ctx.fillStyle = g;
+    ctx.fillRect(i * bw, 0, bw + 1, size);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  return texture;
+}

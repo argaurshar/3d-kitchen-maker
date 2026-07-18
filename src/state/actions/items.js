@@ -76,6 +76,11 @@ export function setUnitParam(itemId, key, value) {
     store.set(`items.${index}.unitType`, value);
     return ok();
   }
+  if (key === 'islandFaces') {
+    if (!['panel', 'shutter'].includes(value)) return fail(`unknown islandFaces "${value}"`);
+    store.set(`items.${index}.islandFaces`, value);
+    return ok();
+  }
   if (key.startsWith('materials.')) {
     const slot = key.split('.')[1];
     if (!['door', 'carcass', 'worktop', 'handle', 'plinth'].includes(slot)) return fail(`unknown material slot "${slot}"`);

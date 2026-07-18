@@ -73,5 +73,13 @@ export function installDebugApi({ camera, controls, renderer, ready, openDoors, 
       group?.traverse((n) => n.isMesh && names.add(n.material.name || 'unnamed'));
       return [...names];
     },
+
+    // Mesh count by surfaceRole on an item (handleless/LED assertions).
+    countRole(itemId, surfaceRole) {
+      const group = projection?.getItemGroup(itemId);
+      let count = 0;
+      group?.traverse((n) => n.isMesh && n.userData.surfaceRole === surfaceRole && (count += 1));
+      return count;
+    },
   };
 }

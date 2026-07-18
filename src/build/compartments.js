@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { DIMS } from '../state/schema.js';
-import { box, cylinder, boxGeom, cylGeom, mergeParts } from './util.js';
+import { box } from './util.js';
 import { buildDoorFronts, buildDrawerFront } from './fronts.js';
+import { buildLiftUpFront, buildBiFoldFront } from './frontsLift.js';
+import { makeProfilePanelBuilder } from './frontsProfile.js';
+import { buildOvenFront, buildMicrowaveFront } from './frontsAppliance.js';
 
 const GAP = DIMS.frontGap;
 const INSET = DIMS.frontGap / 2; // half-gap at edges -> 0.003 between neighbor modules
@@ -101,20 +104,36 @@ function buildCompartment(group, comp, rect, ctx, matLib, tag) {
 
   switch (comp.type) {
     case 'door': {
-      const glass = comp.style?.glass;
-      for (const leaf of buildDoorFronts({
+      const style = comp.style ?? {};
+      const profile = style.profile;
+      // Glass: profile shutters always glaze (variant + optional backlight);
+      // shaker doors glaze via the legacy glass flag.
+      const glassMat = profile
+        ? matLib.get(
+            style.lit
+              ? 'glass_led'
+              : { clear: 'glass_clear', frosted: 'glass_frosted', fluted: 'glass_fluted' }[profile.glass ?? 'clear']
+          )
+        : style.glass
+          ? matLib.get('glass_tint')
+          : null;
+      const opts = {
         rect,
         zBack: ctx.zBack,
-        hinge: comp.style?.hinge ?? 'L',
-        glassMat: glass ? matLib.get('glass_tint') : null,
+        hinge: style.hinge ?? 'L',
+        glassMat,
         doorMat,
         handleStyle,
         handleMat,
         tag,
-      })) {
-        group.add(leaf);
-      }
-      if (glass || comp.shelvesInside > 0) {
+        panelBuilder: profile ? makeProfilePanelBuilder(matLib, profile) : undefined,
+      };
+      const front = style.front ?? 'hinged';
+      if (front === 'liftUp') group.add(buildLiftUpFront(opts));
+      else if (front === 'biFold') group.add(buildBiFoldFront(opts));
+      else for (const leaf of buildDoorFronts(opts)) group.add(leaf);
+
+      if (glassMat || comp.shelvesInside > 0) {
         addInteriorShelves(group, comp.shelvesInside ?? 0, rect, ctx, carcassMat, tag);
       }
       break;
@@ -149,64 +168,3 @@ function addInteriorShelves(group, count, rect, ctx, material, tag) {
   }
 }
 
-// Dark front, glass window band, control strip with 4 knobs, bar handle.
-function buildOvenFront(group, rect, ctx, matLib, tag) {
-  const w = rect.x1 - rect.x0;
-  const h = rect.y1 - rect.y0;
-  const cx = rect.x0 + w / 2;
-  const dark = matLib.get('appliance_dark');
-  const glass = matLib.get('glass_dark');
-  const steel = matLib.get('metal_steel');
-  const t = tag('applianceBody');
-
-  const body = box(w, h, 0.02, dark, t);
-  body.position.set(cx, rect.y0 + h / 2, ctx.zBack + 0.01);
-  group.add(body);
-
-  const win = box(w - 0.12, h * 0.45, 0.006, glass, tag('applianceBody'));
-  win.position.set(cx, rect.y0 + h * 0.34, ctx.zBack + 0.022);
-  group.add(win);
-
-  const steelGeoms = [];
-  for (let k = 0; k < 4; k += 1) {
-    steelGeoms.push(
-      cylGeom(0.009, 0.014, rect.x0 + w * (0.3 + k * 0.135), rect.y1 - 0.05, ctx.zBack + 0.026, { rx: Math.PI / 2, seg: 14 })
-    );
-  }
-  steelGeoms.push(cylGeom(0.006, w - 0.1, cx, rect.y1 - 0.105, ctx.zBack + 0.05, { rz: Math.PI / 2 }));
-  for (const side of [-1, 1]) {
-    steelGeoms.push(
-      cylGeom(0.004, 0.035, cx + side * (w / 2 - 0.08), rect.y1 - 0.105, ctx.zBack + 0.032, { rx: Math.PI / 2, seg: 12 })
-    );
-  }
-  group.add(mergeParts(steelGeoms, steel, tag('applianceBody')));
-}
-
-// Dark front, window on the left, button grid on the right control panel.
-function buildMicrowaveFront(group, rect, ctx, matLib, tag) {
-  const w = rect.x1 - rect.x0;
-  const h = rect.y1 - rect.y0;
-  const dark = matLib.get('appliance_dark');
-  const glass = matLib.get('glass_dark');
-  const steel = matLib.get('metal_steel');
-
-  const body = box(w, h, 0.02, dark, tag('applianceBody'));
-  body.position.set(rect.x0 + w / 2, rect.y0 + h / 2, ctx.zBack + 0.01);
-  group.add(body);
-
-  const panelW = 0.13;
-  const win = box(w - panelW - 0.07, h - 0.07, 0.006, glass, tag('applianceBody'));
-  win.position.set(rect.x0 + (w - panelW) / 2, rect.y0 + h / 2, ctx.zBack + 0.022);
-  group.add(win);
-
-  const gridX = rect.x1 - panelW / 2 - 0.015;
-  const buttonGeoms = [];
-  for (let row = 0; row < 4; row += 1) {
-    for (let col = 0; col < 3; col += 1) {
-      buttonGeoms.push(
-        boxGeom(0.016, 0.012, 0.003, gridX + (col - 1) * 0.024, rect.y0 + h * 0.72 - row * 0.032, ctx.zBack + 0.022)
-      );
-    }
-  }
-  group.add(mergeParts(buttonGeoms, steel, tag('applianceBody')));
-}

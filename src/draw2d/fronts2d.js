@@ -38,17 +38,41 @@ function handleTick(x, y, w, h, hinge) {
 }
 
 function door(comp, x, y, w, h) {
-  const hinge = comp.style?.hinge ?? 'L';
+  const style = comp.style ?? {};
   const out = [R(x, y, w, h, 'ln')];
-  if (hinge === 'double') {
-    const half = w / 2;
-    out.push(L(x + half, y, x + half, y + h, 'ln'));
-    out.push(leafSwing(x, y, half, h, 'L'), leafSwing(x + half, y, half, h, 'R'));
-    out.push(handleTick(x, y, half, h, 'L'), handleTick(x + half, y, half, h, 'R'));
+
+  // Mechanics symbol: lift-up = dashed Λ from the bottom corners to the
+  // top-center (apex at the top-hinge); bi-fold = mid split with fold ticks;
+  // hinged = the classic swing V.
+  const front = style.front ?? 'hinged';
+  if (front === 'liftUp') {
+    out.push(L(x, y + h, x + w / 2, y, 'swing'), L(x + w, y + h, x + w / 2, y, 'swing'));
+  } else if (front === 'biFold') {
+    out.push(L(x, y + h / 2, x + w, y + h / 2, 'ln'));
+    out.push(L(x, y + h, x + w / 2, y + h / 2, 'swing'), L(x + w, y + h, x + w / 2, y + h / 2, 'swing'));
+    out.push(L(x, y + h / 2, x + w / 2, y, 'swing'), L(x + w, y + h / 2, x + w / 2, y, 'swing'));
   } else {
-    out.push(leafSwing(x, y, w, h, hinge), handleTick(x, y, w, h, hinge));
+    const hinge = style.hinge ?? 'L';
+    if (hinge === 'double') {
+      const half = w / 2;
+      out.push(L(x + half, y, x + half, y + h, 'ln'));
+      out.push(leafSwing(x, y, half, h, 'L'), leafSwing(x + half, y, half, h, 'R'));
+      out.push(handleTick(x, y, half, h, 'L'), handleTick(x + half, y, half, h, 'R'));
+    } else {
+      out.push(leafSwing(x, y, w, h, hinge), handleTick(x, y, w, h, hinge));
+    }
   }
-  if (comp.style?.glass) {
+
+  // Panel look: profile shutter = double-line frame + glazing diagonal
+  // (+ LED dot row when backlit); shaker glass = single inset + diagonal.
+  if (style.profile) {
+    out.push(R(x + 3, y + 3, w - 6, h - 6, 'ln'));
+    out.push(R(x + 6, y + 6, w - 12, h - 12, 'glass'));
+    out.push(L(x + 6, y + h - 6, x + w - 6, y + 6, 'glass'));
+    if (style.lit) {
+      for (let k = 1; k <= 3; k += 1) out.push(C(x + (w * k) / 4, y + h - 8, 1.6, 'ln'));
+    }
+  } else if (style.glass) {
     out.push(R(x + 4, y + 4, w - 8, h - 8, 'glass'));
     out.push(L(x + 4, y + h - 4, x + w - 4, y + 4, 'glass'));
   }

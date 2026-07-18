@@ -5,6 +5,7 @@ import { box, boxGeom, mergeParts, worldScaleBoxUVs } from './util.js';
 import { buildHob } from './appliances/hob.js';
 import { buildSink } from './appliances/sink.js';
 import { buildTap } from './appliances/tap.js';
+import { addIslandShutterFaces } from './islandFaces.js';
 
 const FEATURE_BUILDERS = { hob: buildHob, sink: buildSink, tap: buildTap };
 
@@ -50,6 +51,7 @@ export function buildRun(item, matLib) {
   }
   if (ctx.unitType === 'island' && cursor > 0) {
     addIslandPanels(group, item, cursor, ctx, matLib);
+    if (item.islandFaces === 'shutter') addIslandShutterFaces(group, item, cursor, ctx, matLib);
   }
   // Optional backsplash strip between worktop and wall-unit height.
   if (item.backsplash && ctx.unitType === 'base' && cursor > 0) {

@@ -21,8 +21,13 @@ export const DIMS = {
 
 export const MODULE_TYPES = ['cabinet', 'drawerBase', 'blindCorner', 'dishwasher', 'filler'];
 export const COMPARTMENT_TYPES = ['shelf', 'drawer', 'door', 'oven', 'microwave'];
-export const HANDLE_STYLES = ['bar', 'hole', 'cutout'];
+export const HANDLE_STYLES = ['bar', 'hole', 'cutout', 'none', 'jProfile'];
 export const HINGES = ['L', 'R', 'double'];
+// Shutter mechanics for door compartments: hinged swings sideways, liftUp
+// flaps up about the top edge, biFold folds two horizontal leaves upward.
+export const FRONT_STYLES = ['hinged', 'liftUp', 'biFold'];
+export const PROFILE_FRAMES = ['silver', 'black', 'gold'];
+export const PROFILE_GLASS = ['clear', 'frosted', 'fluted'];
 
 // Defaults used by store actions when adding modules/compartments.
 // Ids are assigned by the action layer.

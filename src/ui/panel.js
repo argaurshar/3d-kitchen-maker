@@ -1,32 +1,12 @@
 import { store } from '../state/store.js';
 import * as actions from '../state/actions.js';
-import { effectiveCompartments } from '../build/compartments.js';
 import { renderFridgePanel, renderHoodPanel, renderStoolPanel } from './panelAppliance.js';
-import { el, segmented, slider, stepper, toggle, listRow, button, section, iconButton, rafThrottle } from './controls.js';
+import { renderModulePanel, MODULE_LABELS } from './panelModule.js';
+import { el, segmented, toggle, listRow, button, section, iconButton } from './controls.js';
 import { fmtLen, subscribeUnits } from '../state/units.js';
 
 const UNIT_LABELS = { base: 'Base unit', tall: 'Tall unit', wall: 'Wall unit', island: 'Island' };
 const APPLIANCE_LABELS = { fridge: 'Fridge', hood: 'Extractor hood', sink: 'Sink', hob: 'Hob', tap: 'Tap' };
-const MODULE_LABELS = {
-  cabinet: 'Base cabinet',
-  drawerBase: 'Drawer base',
-  blindCorner: 'Blind corner',
-  dishwasher: 'Dishwasher',
-  filler: 'Filler',
-};
-const MODULE_OPTIONS = Object.entries(MODULE_LABELS).map(([value, label]) => ({ value, label }));
-const COMPARTMENT_OPTIONS = [
-  { value: 'shelf', label: 'Shelf' },
-  { value: 'drawer', label: 'Drawer' },
-  { value: 'door', label: 'Door' },
-  { value: 'oven', label: 'Oven' },
-  { value: 'microwave', label: 'Micro' },
-];
-const HANDLE_OPTIONS = [
-  { value: 'cutout', label: 'Cutout' },
-  { value: 'hole', label: 'Hole' },
-  { value: 'bar', label: 'Bar' },
-];
 const cm = (m) => fmtLen(m);
 
 let root = null;
@@ -97,12 +77,20 @@ function render() {
   const body = el('div', 'panel-body');
   root.appendChild(body);
   if (!root.classList.contains('collapsed')) {
-    const helpers = { addSection: (b, key, title) => addSection(b, key, title), run, withLive };
+    const helpers = {
+      addSection: (b, key, title) => addSection(b, key, title),
+      run,
+      withLive,
+      exitModule: () => {
+        view.moduleId = undefined;
+        render();
+      },
+    };
     if (item.kind === 'appliance' && item.applianceType === 'fridge') renderFridgePanel(body, item, helpers);
     else if (item.kind === 'appliance' && item.applianceType === 'hood') renderHoodPanel(body, item, helpers);
     else if (item.kind === 'furniture' && item.furnitureType === 'stool') renderStoolPanel(body, item, helpers);
     else if (item.kind !== 'run') body.appendChild(el('div', 'panel-note', 'No editable parameters yet'));
-    else if (module) renderModulePanel(body, item, module);
+    else if (module) renderModulePanel(body, item, module, helpers);
     else renderRunPanel(body, item);
   }
   body.scrollTop = prevScroll;
@@ -162,6 +150,18 @@ function renderRunPanel(body, item) {
   const structure = addSection(body, 'structure', 'Structure');
   structure.appendChild(toggle('Worktop', item.worktop !== false, (v) => run(actions.setUnitParam(item.id, 'worktop', v))));
   structure.appendChild(toggle('Plinth (toe kick)', item.plinth !== false, (v) => run(actions.setUnitParam(item.id, 'plinth', v))));
+  if ((item.unitType ?? 'base') === 'island') {
+    const row = el('div', 'row');
+    row.appendChild(el('label', 'row-label', 'Side faces'));
+    row.appendChild(
+      segmented(
+        [{ value: 'panel', label: 'Panels' }, { value: 'shutter', label: 'Shutters' }],
+        item.islandFaces ?? 'panel',
+        (v) => run(actions.setUnitParam(item.id, 'islandFaces', v))
+      )
+    );
+    structure.appendChild(row);
+  }
 
   const runActions = addSection(body, 'run-actions', 'Actions');
   runActions.appendChild(toggle('Open fronts', item.openFronts === true, (v) => run(actions.setUnitParam(item.id, 'openFronts', v))));
@@ -177,81 +177,4 @@ function renderRunPanel(body, item) {
       );
     }
   }
-}
-
-function renderModulePanel(body, item, module) {
-  const crumb = el('div', 'breadcrumb');
-  const back = iconButton('back', () => {
-    view.moduleId = undefined;
-    render();
-  }, 'Back');
-  crumb.append(back, el('span', 'crumb-label', UNIT_LABELS[item.unitType ?? 'base'] ?? 'Unit'));
-  crumb.appendChild(el('span', 'crumb-current', MODULE_LABELS[module.type] ?? module.type));
-  body.appendChild(crumb);
-
-  body.appendChild(segmented(MODULE_OPTIONS, module.type, (v) => run(actions.setModuleParam(item.id, module.id, 'type', v))));
-
-  const isFiller = module.type === 'filler';
-  const applyWidth = rafThrottle((v) => withLive(() => actions.setModuleParam(item.id, module.id, 'width', v / 100)));
-  body.appendChild(
-    slider('Width', isFiller ? 6 : 30, isFiller ? 30 : 120, 2, Math.round(module.width * 100), (v) => fmtLen(v / 100), (v, live) => {
-      if (live) applyWidth(v);
-      else run(actions.setModuleParam(item.id, module.id, 'width', v / 100));
-    })
-  );
-
-  const comps = effectiveCompartments(module);
-  const compBody = addSection(body, 'compartments', 'Compartments');
-  comps.forEach((comp, i) => {
-    const block = el('div', 'comp-block');
-    block.appendChild(
-      listRow(el('span', 'list-label-main', `${i + 1}`), {
-        onUp: () => run(actions.moveCompartment(item.id, module.id, comp.id, -1)),
-        onDown: () => run(actions.moveCompartment(item.id, module.id, comp.id, +1)),
-        onDelete: () => run(actions.removeCompartment(item.id, module.id, comp.id)),
-      })
-    );
-    block.appendChild(
-      segmented(COMPARTMENT_OPTIONS, comp.type, (v) => run(actions.setCompartmentParam(item.id, module.id, comp.id, 'type', v)))
-    );
-    if (comp.type === 'door') {
-      const style = el('div', 'row style-row');
-      style.appendChild(
-        segmented(
-          [{ value: 'L', label: 'Hinge L' }, { value: 'R', label: 'Hinge R' }, { value: 'double', label: 'Double' }],
-          comp.style?.hinge ?? 'L',
-          (v) => run(actions.setCompartmentParam(item.id, module.id, comp.id, 'hinge', v))
-        )
-      );
-      style.appendChild(toggle('Glass', Boolean(comp.style?.glass), (v) => run(actions.setCompartmentParam(item.id, module.id, comp.id, 'glass', v))));
-      block.appendChild(style);
-    }
-    if (comp.type === 'shelf' || (comp.type === 'door' && comp.style?.glass)) {
-      block.appendChild(
-        stepper('Shelves inside', comp.shelvesInside ?? 0, 0, 6, (v) =>
-          run(actions.setCompartmentParam(item.id, module.id, comp.id, 'shelvesInside', v))
-        )
-      );
-    }
-    compBody.appendChild(block);
-  });
-  compBody.appendChild(button('+ Add compartment', () => run(actions.addCompartment(item.id, module.id, 'door')), 'wide'));
-
-  const handleBody = addSection(body, 'handle', 'Handle');
-  handleBody.appendChild(segmented(HANDLE_OPTIONS, module.handle ?? 'bar', (v) => run(actions.setModuleParam(item.id, module.id, 'handle', v))));
-
-  const actionsBody = addSection(body, 'actions', 'Actions');
-  actionsBody.appendChild(toggle('Open fronts', item.openFronts === true, (v) => run(actions.setUnitParam(item.id, 'openFronts', v))));
-  actionsBody.appendChild(
-    button('Duplicate', () => {
-      const clone = structuredClone({ type: module.type, width: module.width, handle: module.handle, compartments: effectiveCompartments(module).map(({ id, ...c }) => c) });
-      run(actions.addModule(item.id, module.id, clone));
-    })
-  );
-  actionsBody.appendChild(
-    button('Delete', () => {
-      view.moduleId = undefined;
-      run(actions.removeModule(item.id, module.id));
-    }, 'danger')
-  );
 }

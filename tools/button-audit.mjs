@@ -558,6 +558,92 @@ await guard('dblclick + help', async () => {
   check('help: Escape closes the overlay', (await page.locator('.help-overlay:not(.hidden)').count()) === 0);
 });
 
+// ---------------------------------------------------------------- SHUTTER SYSTEMS
+await guard('shutters', async () => {
+  await reload();
+  const ids = await app(() => {
+    const run = window.__app.store.get().items.find((i) => i.id === 'wall-run');
+    return run.modules.map((m) => ({ m: m.id, c: m.compartments[0].id }));
+  });
+
+  // Front styles via actions render without errors and are visible in state.
+  for (const [style, slot] of [['liftUp', 0], ['biFold', 1]]) {
+    const r = await app(([s, mod]) => window.__app.actions.setCompartmentParam('wall-run', mod.m, mod.c, 'front', s), [style, ids[slot]]);
+    check(`shutters: ${style} applies`, r.ok);
+  }
+  await page.waitForTimeout(200);
+
+  // Profile gold: frame material appears on the item.
+  await app((mod) => {
+    const a = window.__app.actions;
+    a.setCompartmentParam('wall-run', mod.m, mod.c, 'profile', true);
+    a.setCompartmentParam('wall-run', mod.m, mod.c, 'profileFrame', 'gold');
+    a.setCompartmentParam('wall-run', mod.m, mod.c, 'profileGlass', 'frosted');
+  }, ids[2]);
+  await page.waitForTimeout(200);
+  const mats = await app(() => window.__app.getItemMaterials('wall-run'));
+  check('shutters: gold profile uses brass frame', mats.includes('metal_brass'), mats.join(','));
+
+  // Backlit pane material.
+  await app((mod) => window.__app.actions.setCompartmentParam('wall-run', mod.m, mod.c, 'lit', true), ids[2]);
+  await page.waitForTimeout(200);
+  check('shutters: backlit pane uses glass_led',
+    (await app(() => window.__app.getItemMaterials('wall-run'))).includes('glass_led'));
+
+  // Open-state contract: full open + close on lift/bi-fold fronts is clean
+  // (any contract break would throw inside applyOpenAmount).
+  await app(() => window.__app.setOpen(1));
+  await page.waitForTimeout(300);
+  await app(() => window.__app.setOpen(0));
+  await page.waitForTimeout(200);
+  check('shutters: open/close cycle clean', true);
+
+  // Handleless: none -> zero handle meshes on that module's run.
+  await app(() => window.__app.actions.setModuleParam('base-run', 'b2', 'handle', 'none'));
+  await page.waitForTimeout(200);
+  const nNone = await app(() => window.__app.countRole('base-run', 'handle'));
+  await app(() => window.__app.actions.setModuleParam('base-run', 'b2', 'handle', 'jProfile'));
+  await page.waitForTimeout(200);
+  const nJ = await app(() => window.__app.countRole('base-run', 'handle'));
+  check('shutters: handleless drops a handle mesh, jProfile restores one', nJ === nNone + 1, `${nNone} -> ${nJ}`);
+
+  // Island shutter faces: doorFront count rises and faces paint with fronts.
+  const before = await app(() => window.__app.countRole('island-1', 'doorFront'));
+  await app(() => window.__app.actions.setUnitParam('island-1', 'islandFaces', 'shutter'));
+  await page.waitForTimeout(250);
+  const after = await app(() => window.__app.countRole('island-1', 'doorFront'));
+  check('island: shutter faces add doorFront meshes', after > before, `${before} -> ${after}`);
+  const paintRes = await app(() => window.__app.actions.setUnitParam('island-1', 'materials.door', 'paint_white'));
+  await page.waitForTimeout(200);
+  check('island: shutter faces repaint with fronts', paintRes.ok &&
+    (await app(() => window.__app.getItemMaterials('island-1'))).includes('paint_white'));
+
+  // Undo across a front-style change.
+  await page.waitForTimeout(400);
+  const f0 = await app(([mod]) => {
+    const run = window.__app.store.get().items.find((i) => i.id === 'wall-run');
+    return run.modules[0].compartments[0].style.front;
+  }, [ids[0]]);
+  await app((mod) => window.__app.actions.setCompartmentParam('wall-run', mod.m, mod.c, 'front', 'hinged'), ids[0]);
+  await page.waitForTimeout(400);
+  await page.keyboard.press('Control+z');
+  await page.waitForTimeout(250);
+  const fUndo = await app(() => {
+    const run = window.__app.store.get().items.find((i) => i.id === 'wall-run');
+    return run.modules[0].compartments[0].style.front;
+  });
+  check('shutters: undo restores the front style', fUndo === f0, `${f0} vs ${fUndo}`);
+
+  // Panel controls for shutters exist when a door module is open.
+  await app(() => window.__app.select('wall-run'));
+  await page.waitForTimeout(200);
+  await page.locator('.panel-body .list-row-main.clickable').first().click();
+  await page.waitForTimeout(200);
+  const segTexts = await page.locator('.panel-body .seg-btn').allTextContents();
+  check('panel: shutter controls present (Lift-up / J-Profile)',
+    segTexts.includes('Lift-up') && segTexts.includes('J-Profile'), segTexts.join('|'));
+});
+
 // ---------------------------------------------------------------- SUMMARY
 const failed = results.filter((r) => !r.passed);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
